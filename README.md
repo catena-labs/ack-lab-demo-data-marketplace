@@ -1,195 +1,133 @@
-# Data Marketplace Demo
+# ACK Data Marketplace Demo
 
-A visual and interactive demonstration of AI agents negotiating data purchases in a research marketplace. This demo showcases agent-to-agent communication where a researcher agent negotiates with a data provider agent to purchase research resources within a budget.
+![Agent Commerce Kit](https://github.com/agentcommercekit/ack/raw/main/assets/readme-hero.png)
 
-## 🎯 Demo Overview
+[![Run on Replit](https://replit.com/badge?caption=Run%20on%20Replit)](https://replit.new/github.com/catena-labs/ack-data-marketplace-demo)
 
-This demo simulates a real-world scenario where:
-- **Agent A (Researcher)** has a $275 budget and needs research data
-- **Agent B (Data Provider)** offers various research resources at different prices
-- The agents negotiate prices automatically, with the provider having minimum acceptable prices
-- Once agreed, payment is processed and access tokens are provided
-
-## 📊 Available Data Resources
-
-1. **US Housing Market Inventory 2024**
-   - Format: CSV, 12 MB
-   - List Price: $300 (negotiable down to $200)
-   - Comprehensive housing data across US metro areas
-
-2. **SPY Minute-Level Ticker Data (365 days)**
-   - Format: CSV, 5 MB  
-   - List Price: $350 (negotiable down to $250)
-   - Minute-by-minute S&P 500 ETF ticker data
-
-3. **Comprehensive LLM Benchmarking Study 2024**
-   - Format: PDF, 2.5 MB
-   - List Price: $200 (negotiable down to $150)
-   - Academic paper on LLM performance benchmarks
+A demonstration of secure agent-to-agent commerce where autonomous AI agents negotiate and transact data purchases with built-in authentication and payment processing.
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### 1. Run on Replit (Easiest)
+[![Run on Replit](https://replit.com/badge?caption=Run%20on%20Replit)](https://replit.new/github.com/catena-labs/ack-data-marketplace-demo)
 
-- Node.js 18+ 
-- pnpm (or npm)
-- API credentials from ACK Lab
+### 2. Get Your Credentials
+1. Go to [ack-lab.catenalabs.com](https://ack-lab.catenalabs.com)
+2. Sign up for the developer preview
+3. Register two agents through the app flow
+4. Copy your credentials
 
-### Setup
+### 3. Configure & Run
+1. Click "Run" on Replit (or run `./setup-and-run.sh` locally)
+2. Enter your credentials when prompted:
+   - Anthropic API key
+   - Agent A client ID & secret  
+   - Agent B client ID & secret
+3. Choose your demo mode (CLI or Web UI)
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd ack-data-marketplace-demo
-   ```
+<div align="center">
+  <img src="./assets/replit-run-icon.png" alt="Get Started on Replit" width="100">
+</div>
 
-2. **Create `.env` file** with your ACK Lab credentials:
-   ```env
-   CLIENT_ID_AGENT_A=your_client_id_for_agent_a
-   CLIENT_SECRET_AGENT_A=your_client_secret_for_agent_a
-   CLIENT_ID_AGENT_B=your_client_id_for_agent_b
-   CLIENT_SECRET_AGENT_B=your_client_secret_for_agent_b
-   ```
+## 📊 What This Demo Does
 
-3. **Run the demo**
-   ```bash
-   ./start-demo.sh
-   ```
+Watch two AI agents negotiate a data marketplace transaction:
 
-   This will:
-   - Install all dependencies
-   - Start the agent servers (ports 7576 & 7577)
-   - Launch the web UI (port 3000)
-   - Open your browser to http://localhost:3000
+- **Agent A (Researcher)**: Has a budget and needs research data
+- **Agent B (Data Provider)**: Offers premium datasets at negotiable prices
+- **Real Payments**: Agents use ACK-Lab to process actual transactions
+- **Secure Communication**: All agent-to-agent messages are authenticated and encrypted
 
-### Alternative Manual Setup
+### Available Datasets
+1. **US Housing Market Inventory 2024**: $300 (negotiable down to $200)
+2. **SPY Ticker Data (365 days)**: $350 (negotiable down to $250)  
+3. **LLM Benchmarking Study 2024**: $200 (negotiable down to $150)
 
-If you prefer to run services separately:
+### Demo Modes
+- **CLI Demo**: Watch agents negotiate in real-time through the terminal
+- **Web UI**: Visual interface to monitor negotiations and transactions
 
-1. **Install dependencies**
-   ```bash
-   pnpm install
-   cd web-ui && npm install
-   ```
+## 🏗️ Technical Details
 
-2. **Start agent servers** (in one terminal)
-   ```bash
-   npx tsx data-negotiation-agents-server.ts
-   ```
-
-3. **Start web UI** (in another terminal)
-   ```bash
-   cd web-ui
-   npm run dev
-   ```
-
-## 🎮 Using the Demo
-
-### Web Interface
-
-1. **Browse Catalog**: View available research resources with prices
-2. **Start Negotiation**: Click on any resource card to begin
-3. **Watch Negotiation**: See real-time agent conversation and price negotiations
-4. **Payment Process**: Observe automatic payment processing
-5. **Access Token**: Receive access token upon successful transaction
-
-### Visual Features
-
-- **Data Catalog Tab**: Browse available resources with pricing indicators
-- **Negotiation Tab**: Live conversation view with price offers and counter-offers
-- **Transaction Tab**: Payment processing and access token delivery
-- **Budget Display**: Shows researcher's available budget ($275)
-- **Price Indicators**: Visual cues for resources over budget
-
-## 🏗️ Architecture
+The demo spins up two independent agent servers that communicate via HTTP endpoints:
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│                 │     │                  │     │                 │
-│   Web UI        │────▶│  Agent A         │────▶│  Agent B        │
-│  (Next.js)      │     │  (Researcher)    │     │  (Data Provider)│
-│                 │     │  Port: 7576      │     │  Port: 7577     │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
-        │                       │                         │
-        │                       └─────────────────────────┘
-        │                                 │
-        │                           ACK Lab SDK
-        │                          (Payment Processing)
-        ▼
-   User Interface
-   - Data Catalog
-   - Negotiation View  
-   - Transaction Status
-```
-
-## 📁 Project Structure
-
-```
-ack-data-marketplace-demo/
-├── data-negotiation-agents-server.ts  # Agent server implementation
-├── web-ui/                            # Next.js web interface
-│   ├── src/
-│   │   ├── app/
-│   │   │   ├── api/                  # API routes for negotiation
-│   │   │   └── page.tsx              # Main page
-│   │   └── components/
-│   │       └── data-negotiation-interface.tsx  # Main UI component
-├── cli-demos/                         # CLI version of the demo
-├── start-demo.sh                      # Quick start script
-└── .env                              # Environment variables
-```
-
-## 🔧 Configuration
-
-### Agent Budget
-- Researcher budget: $275 (configured in `data-negotiation-agents-server.ts`)
-
-### Minimum Prices
-- Housing data: $200
-- Ticker data: $250  
-- LLM paper: $150
-
-### Negotiation Strategy
-- Researcher starts at 80-85% of list price if over budget
-- Provider counters with prices between offer and list price
-- Automatic acceptance when price is within budget
-
-## 🐛 Troubleshooting
-
-### Port Already in Use
-If ports 3000, 7576, or 7577 are already in use:
-```bash
-# Kill processes on specific ports
-lsof -ti:3000 | xargs kill
-lsof -ti:7576 | xargs kill  
-lsof -ti:7577 | xargs kill
-```
-
-### Missing Dependencies
-```bash
-# Reinstall all dependencies
-rm -rf node_modules web-ui/node_modules
-pnpm install
-cd web-ui && npm install
+┌─────────────────┐                      ┌─────────────────┐
+│   Agent A       │  HTTP POST /chat     │   Agent B       │
+│  (Researcher)   │─────────────────────▶│ (Data Provider) │
+│  Port: 7576     │◀─────────────────────│  Port: 7577     │
+└─────────────────┘  Negotiation Flow    └─────────────────┘
+        │                                          │
+        └──────────────────┬───────────────────────┘
+                           │
+                    ACK Lab SDK
+                 (api.ack-lab.com)
+              ┌────────────┴────────────┐
+              │ • Identity Verification  │
+              │ • Payment Processing     │
+              │ • Token Generation       │
+              └─────────────────────────┘
 ```
 
 ### Environment Variables
-Ensure `.env` file has all required credentials:
-- CLIENT_ID_AGENT_A
-- CLIENT_SECRET_AGENT_A
-- CLIENT_ID_AGENT_B
-- CLIENT_SECRET_AGENT_B
+```env
+ANTHROPIC_API_KEY=your_anthropic_key
+CLIENT_ID_AGENT_A=your_agent_a_client_id
+CLIENT_SECRET_AGENT_A=your_agent_a_client_secret
+CLIENT_ID_AGENT_B=your_agent_b_client_id  
+CLIENT_SECRET_AGENT_B=your_agent_b_client_secret
+RESEARCHER_BUDGET=275  # Optional: Set custom budget (default: 275)
+```
 
-## 📝 Notes
+### Replit Port Configuration
+- **Agent A**: Internal port 7576 → External port 3000
+- **Agent B**: Internal port 7577 → External port 3001  
+- **Web UI**: Internal port 3000 → External port 80
 
-- The demo uses mock data and simulated transactions for demonstration purposes
-- Payment tokens and access tokens are generated locally
-- The negotiation logic can be customized in `data-negotiation-agents-server.ts`
-- UI components can be modified in `web-ui/src/components/`
+## 💻 Local Development
 
-## 🤝 Contributing
+### Prerequisites
+- Node.js 18+
+- npm or pnpm
+- ACK Lab credentials from [ack-lab.catenalabs.com](https://ack-lab.catenalabs.com)
 
-Feel free to submit issues and enhancement requests!
+### Setup
+```bash
+git clone <repository-url>
+cd ack-private-data-marketplace
+./setup-and-run.sh
+```
+
+### Local Access Points
+- Agent A: `http://localhost:7576`
+- Agent B: `http://localhost:7577`
+- Web UI: `http://localhost:3000`
+
+## 🐛 Troubleshooting
+
+- **Missing credentials**: Get them from [ack-lab.catenalabs.com](https://ack-lab.catenalabs.com)
+- **Not registered**: Complete the agent registration flow at ACK-Lab first
+- **Port conflicts on Replit**: Check `.replit` file for correct port mappings
+- **Connection refused**: Verify agent servers are running on correct ports
+- **Payment failures**: Check ACK Lab API connectivity and credentials
+
+## 📖 About Agent Commerce Kit (ACK)
+
+**Agent Commerce Kit (ACK)** is an open-source framework by [Catena Labs](https://www.catenalabs.com) that enables AI agents to participate securely in commerce. 
+
+### What ACK Provides
+
+- **ACK-ID**: Verifiable agent identity through DIDs and VCs
+- **ACK-Pay**: Agent-native payment patterns for diverse payment rails
+- **ACK-Lab**: Developer preview platform providing identity, wallet, and rulebook for agents
+
+ACK solves the fundamental challenge that today's financial infrastructure wasn't designed for AI agents - no identity standards, high transaction barriers, and limited support for agent-specific transaction models.
+
+### Learn More
+
+- [Agent Commerce Kit Documentation](https://agentcommercekit.com)
+- [ACK-Lab Developer Preview](https://ack-lab.catenalabs.com)
+- [Catena Labs](https://www.catenalabs.com)
 
 ## 📄 License
 

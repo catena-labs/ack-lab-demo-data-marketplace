@@ -1,35 +1,62 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-// This route handles payment processing for data negotiation
+// This route handles payment processing through Agent A for data negotiation
 export async function POST(request: NextRequest) {
   try {
     const { paymentToken, amount } = await request.json();
     
-    if (!paymentToken || !amount) {
+    if (!paymentToken) {
       return NextResponse.json(
-        { error: 'Missing paymentToken or amount' },
+        { error: 'Missing paymentToken' },
         { status: 400 }
       );
     }
     
-    console.log('Processing payment:', { paymentToken, amount });
+    console.log('Processing payment through Agent A:', { paymentToken, amount });
     
-    // In a real implementation, this would process the actual payment
-    // For the demo, we'll simulate a successful payment
-    const receiptId = `receipt_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    // Create the message for Agent A to execute the payment
+    // Agent A will use its executePayment tool with the provided token
+    const paymentMessage = `Please execute the payment using this token: ${paymentToken}`;
     
-    // Generate access token (this would normally come from the agent)
-    const accessToken = `access_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+    // Send payment execution request to Agent A
+    const response = await fetch('http://localhost:7576/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message: paymentMessage }),
+    });
     
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 500));
+    if (!response.ok) {
+      console.error('Agent A payment response not OK:', response.status);
+      throw new Error('Failed to execute payment through Agent A');
+    }
+    
+    const result = await response.json();
+    const agentResponse = result.text;
+    
+    console.log('Agent A payment response:', agentResponse);
+    
+    // Extract receipt JWT from response (starts with eyJ)
+    const receiptMatch = agentResponse.match(/eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+/);
+    
+    if (!receiptMatch) {
+      // Payment might have failed
+      return NextResponse.json({
+        success: false,
+        message: agentResponse,
+        error: 'Payment failed or receipt not found in response'
+      }, { status: 400 });
+    }
+    
+    const receiptId = receiptMatch[0];
     
     return NextResponse.json({
       success: true,
       receiptId,
-      accessToken,
       amount,
-      message: 'Payment processed successfully',
+      message: 'Payment processed successfully through Agent A',
+      agentResponse,
       timestamp: new Date().toISOString()
     });
     

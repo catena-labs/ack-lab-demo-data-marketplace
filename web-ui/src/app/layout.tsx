@@ -6,8 +6,8 @@ import { Toaster } from "@/components/ui/sonner";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "USDC to ETH Swap Demo | ACK Lab",
-  description: "Educational demo showcasing agent-to-agent communication for cryptocurrency swaps",
+  title: "Data Negotiation Marketplace | ACK Lab",
+  description: "AI agents negotiate data prices in real-time through automated agent-to-agent communication",
 };
 
 export default function RootLayout({

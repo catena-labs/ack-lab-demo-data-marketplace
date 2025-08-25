@@ -3,7 +3,7 @@ import colors from "yoctocolors"
 import { input } from "@inquirer/prompts"
 
 // Configuration for display purposes
-const RESEARCHER_BUDGET = 275 // Maximum budget for Agent A
+const RESEARCHER_BUDGET = parseInt(process.env.RESEARCHER_BUDGET || "275") // Maximum budget for Agent A (from env or default 275)
 const MIN_PRICES = {
   housing: 200,    // Minimum price for housing market data
   ticker: 250,     // Minimum price for ticker data

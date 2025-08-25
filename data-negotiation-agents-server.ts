@@ -4,19 +4,20 @@ import { serveAgent, serveAuthedAgent } from "./serve-agent"
 import { anthropic } from "@ai-sdk/anthropic"
 import { z } from "zod"
 import { AckLabSdk } from "@ack-hub/sdk"
+import { logger } from "./logger"
 
 // Configuration
 const DECODE_JWT = true // Flag to decode and display JWT payloads
-const RESEARCHER_BUDGET = 275 // Maximum budget for Agent A
+const RESEARCHER_BUDGET = parseInt(process.env.RESEARCHER_BUDGET || "10") // Maximum budget for Agent A (from env or default 275)
 const MIN_PRICES = {
-  housing: 200,    // Minimum price for housing market data
-  ticker: 250,     // Minimum price for ticker data
-  llm_paper: 150   // Minimum price for LLM research paper
+  housing: 8,    // Minimum price for housing market data
+  ticker: 10,     // Minimum price for ticker data
+  llm_paper: 12   // Minimum price for LLM research paper
 }
 
 // Agent B SDK instance for payment handling
 const agentBSdk = new AckLabSdk({
-  baseUrl: "https://api.ack-lab.com",
+  // baseUrl: "https://api.ack-lab.com",
   clientId: process.env.CLIENT_ID_AGENT_B!,
   clientSecret: process.env.CLIENT_SECRET_AGENT_B!
 })
@@ -40,7 +41,7 @@ const dataCatalogue: DataResource[] = [
     description: "Comprehensive housing inventory data across all US metropolitan areas for 2024",
     format: "CSV",
     size: "12 MB",
-    listPrice: 300,
+    listPrice: 10,
     minimumPrice: MIN_PRICES.housing,
     category: "housing"
   },
@@ -50,7 +51,7 @@ const dataCatalogue: DataResource[] = [
     description: "Minute-by-minute ticker data for SPDR S&P 500 ETF (SPY) for the last 365 days",
     format: "CSV",
     size: "5 MB",
-    listPrice: 350,
+    listPrice: 12,
     minimumPrice: MIN_PRICES.ticker,
     category: "ticker"
   },
@@ -60,7 +61,7 @@ const dataCatalogue: DataResource[] = [
     description: "Academic paper analyzing performance benchmarks of major LLMs with detailed methodology",
     format: "PDF",
     size: "2.5 MB",
-    listPrice: 200,
+    listPrice: 13,
     minimumPrice: MIN_PRICES.llm_paper,
     category: "llm_paper"
   }
@@ -76,6 +77,7 @@ interface PendingNegotiation {
 
 const pendingNegotiations = new Map<string, PendingNegotiation>()
 const completedTransactions = new Map<string, { resourceId: string; finalPrice: number }>()
+let lastProvidedPaymentToken: string | null = null // Track the last payment token provided
 
 // Generate access token
 function generateAccessToken(resourceId: string): string {
@@ -102,20 +104,33 @@ async function runAgentB(message: string) {
     Your available resources are:
     ${dataCatalogue.map(r => `- ${r.name}: ${r.description} (${r.format}, ${r.size}) - List price: $${r.listPrice}`).join('\n')}
     
-    When someone requests data:
-    1. Identify which resource matches their needs
-    2. Present the resource with its list price
-    3. If they negotiate, you can go down to the minimum price but no lower
-    4. Be firm but professional in negotiations
-    5. Once a price is agreed, create a payment request
-    6. After payment confirmation, provide an access token
+    WORKFLOW:
+    1. When someone requests data: Use findMatchingResource to identify which resource matches their needs
+    2. Present the resource with its list price and ask if they want to proceed
+    3. If they negotiate: You can go down to minimum price but no lower
+    4. Once price is agreed: Use createDataPaymentRequest to generate a payment token
+    5. CRITICAL - When buyer confirms payment with a receipt:
+       a. First, use getLastPaymentToken to retrieve the payment token you provided
+       b. Then immediately use provideAccessDataURL with BOTH:
+          - paymentToken: the token from getLastPaymentToken (or extract from your previous message)
+          - receiptId: the receipt JWT the buyer just provided
+       c. Share the resulting download URL with the buyer
+    
+    EXAMPLE FLOW when buyer provides receipt:
+    Buyer: "Payment completed! Here's my receipt: eyJ..."
+    You should:
+    1. Call getLastPaymentToken() to get the payment token
+    2. Call provideAccessDataURL(paymentToken: [from step 1], receiptId: "eyJ...")
+    3. Respond: "Perfect! Here's your direct download URL: [downloadUrl from step 2]"
+    
+    DO NOT apologize for technical difficulties or say there's an issue with validation.
+    The provideAccessDataURL tool WILL work if you provide both tokens correctly.
+    NEVER return a payment token as an access token or download URL - they are completely different.
     
     Minimum prices (do not go below these):
     - Housing data: $${MIN_PRICES.housing}
     - Ticker data: $${MIN_PRICES.ticker}
-    - LLM paper: $${MIN_PRICES.llm_paper}
-    
-    During negotiation, if their offer is below minimum, suggest a price between their offer and list price, but not below minimum.`,
+    - LLM paper: $${MIN_PRICES.llm_paper}`,
     prompt: message,
     tools: {
       findMatchingResource: tool({
@@ -124,7 +139,7 @@ async function runAgentB(message: string) {
           query: z.string().describe("What the user is looking for")
         }),
         execute: async ({ query }) => {
-          console.log("🔍 Searching catalogue for:", query)
+          logger.process('Searching catalogue', { query })
           
           // Simple keyword matching
           let matchedResource: DataResource | undefined
@@ -138,7 +153,7 @@ async function runAgentB(message: string) {
           }
           
           if (matchedResource) {
-            console.log("✓ Found matching resource:", matchedResource.name)
+            logger.success('Found matching resource', matchedResource.name)
             return {
               found: true,
               resource: matchedResource
@@ -177,8 +192,12 @@ async function runAgentB(message: string) {
             negotiation.negotiationRound++
           }
           
-          console.log("💰 Negotiation:", `Offered $${offeredPrice} for ${resource.name}`)
-          console.log(`   List price: $${resource.listPrice}, Minimum: $${resource.minimumPrice}`)
+          logger.market('Negotiation', {
+            'Resource': resource.name,
+            'Offered': `$${offeredPrice}`,
+            'List price': `$${resource.listPrice}`,
+            'Minimum': `$${resource.minimumPrice}`
+          })
           
           if (offeredPrice >= resource.listPrice) {
             return {
@@ -209,11 +228,11 @@ async function runAgentB(message: string) {
         }
       }),
       createDataPaymentRequest: tool({
-        description: "Create a payment request for agreed data purchase",
+        description: "Create a payment request for agreed data purchase - generates a payment token that buyer will use to pay",
         inputSchema: z.object({
           resourceId: z.string().describe("ID of the resource being purchased"),
           agreedPrice: z.number().describe("Final agreed price"),
-          negotiationId: z.string().describe("Negotiation session ID")
+          negotiationId: z.string().describe("Negotiation session ID - use the same ID throughout the conversation")
         }),
         execute: async ({ resourceId, agreedPrice, negotiationId }) => {
           const resource = dataCatalogue.find(r => r.id === resourceId)
@@ -221,8 +240,10 @@ async function runAgentB(message: string) {
             return { error: "Resource not found" }
           }
           
-          console.log(">>> Creating payment request for:", resource.name)
-          console.log(">>> Agreed price:", `$${agreedPrice}`)
+          logger.transaction('Creating payment request', {
+            'Resource': resource.name,
+            'Agreed price': `$${agreedPrice}`
+          })
           
           // Create payment request (price in cents)
           const { paymentToken } = await agentBSdk.createPaymentRequest(
@@ -236,7 +257,10 @@ async function runAgentB(message: string) {
             negotiation.paymentToken = paymentToken
           }
           
-          console.log(">>> Payment token generated:", paymentToken)
+          // Store as last provided payment token
+          lastProvidedPaymentToken = paymentToken
+          
+          logger.info('Payment token generated', paymentToken)
           
           // Decode and display JWT payload if flag is enabled
           if (DECODE_JWT) {
@@ -244,9 +268,9 @@ async function runAgentB(message: string) {
             if (tokenParts.length === 3) {
               try {
                 const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString())
-                console.log(">>> Decoded JWT payload:", JSON.stringify(payload, null, 2))
+                logger.debug('Decoded JWT payload', payload)
               } catch {
-                console.log(">>> Could not decode payment token as JWT")
+                logger.warn('Could not decode payment token as JWT')
               }
             }
           }
@@ -263,11 +287,27 @@ async function runAgentB(message: string) {
           }
         }
       }),
-      provideAccessToken: tool({
-        description: "Provide access token after payment confirmation",
+      getLastPaymentToken: tool({
+        description: "ALWAYS use this first when buyer provides a receipt - retrieves the payment token you previously gave them",
+        inputSchema: z.object({}),
+        execute: async () => {
+          if (lastProvidedPaymentToken) {
+            return {
+              paymentToken: lastProvidedPaymentToken,
+              message: "Found the last payment token provided"
+            }
+          }
+          return {
+            paymentToken: null,
+            message: "No payment token has been provided yet"
+          }
+        }
+      }),
+      provideAccessDataURL: tool({
+        description: "MUST use this when buyer provides receipt - generates direct download URL for confirmed payment. Call getLastPaymentToken first to get the paymentToken",
         inputSchema: z.object({
-          paymentToken: z.string().describe("The payment token that was paid"),
-          receiptId: z.string().describe("The receipt ID from the payment")
+          paymentToken: z.string().describe("The payment token YOU provided earlier (get from getLastPaymentToken)"),
+          receiptId: z.string().describe("The receipt JWT the buyer just provided (starts with eyJ)")
         }),
         execute: async ({ paymentToken, receiptId }) => {
           // Find the negotiation with this payment token
@@ -291,8 +331,11 @@ async function runAgentB(message: string) {
             return { error: "This transaction has already been completed" }
           }
           
-          // Generate access token
+          // Generate access token for URL
           const accessToken = generateAccessToken(foundNegotiation.resource.id)
+          
+          // Create download URL
+          const downloadUrl = `https://data-provider.example.com/download/${foundNegotiation.resource.id}?token=${accessToken}`
           
           // Mark as completed
           completedTransactions.set(paymentToken, {
@@ -301,19 +344,23 @@ async function runAgentB(message: string) {
           })
           pendingNegotiations.delete(negotiationId)
           
-          console.log("✅ Access token generated:", accessToken)
+          logger.success('Download URL generated', downloadUrl)
           
           return {
             success: true,
-            accessToken,
+            downloadUrl,
             resource: {
               name: foundNegotiation.resource.name,
               format: foundNegotiation.resource.format,
-              size: foundNegotiation.resource.size,
-              downloadUrl: `https://data-provider.example.com/download/${foundNegotiation.resource.id}?token=${accessToken}`
+              size: foundNegotiation.resource.size
+            },
+            accessDetails: {
+              url: downloadUrl,
+              validUntil: "48 hours from now",
+              accessKey: accessToken
             },
             receipt: receiptId,
-            message: "Payment confirmed. Here is your access token for the data."
+            message: "Payment confirmed. Here is your direct download URL for the data."
           }
         }
       })
@@ -326,7 +373,7 @@ async function runAgentB(message: string) {
 
 // Agent A SDK instance
 const agentASdk = new AckLabSdk({
-  baseUrl: "https://api.ack-lab.com",
+  // baseUrl: "https://api.ack-lab.com",
   clientId: process.env.CLIENT_ID_AGENT_A!,
   clientSecret: process.env.CLIENT_SECRET_AGENT_A!
 })
@@ -348,8 +395,9 @@ async function runAgentA(message: string) {
     1. Express interest in the resource
     2. If the price is over your budget, negotiate by offering something reasonable but under budget
     3. Be willing to meet in the middle during negotiations
-    4. Once you agree on a price, pay using the payment token provided
-    5. After payment, you'll receive an access token for the data
+    4. Once you agree on a price, pay using the payment token provided.
+    5. Give the data provider BOTH the payment token and the receipt ID.
+    6. You'll receive an access URL for the data
     
     Negotiation strategy:
     - Start by offering about 80-85% of the list price if it's over budget
@@ -365,20 +413,35 @@ async function runAgentA(message: string) {
           message: z.string()
         }),
         execute: async ({ message }) => {
-          console.log(">>>> Calling data provider:", message)
+          logger.agent('Calling data provider', message)
           try {
             const response = await callAgent({ message })
-            console.log(">>>> Data provider response:", response)
+            logger.incoming('Data provider response', response)
             
-            // Try to extract payment token if present
-            const paymentTokenMatch = response.match(/pay_[a-zA-Z0-9]+/)
+            // Try to extract and decode payment token if present (JWT format)
+            // JWTs start with eyJ and have three base64 parts separated by dots
+            const paymentTokenMatch = response.match(/eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+/)
             if (paymentTokenMatch) {
-              console.log(">>>> Detected payment token:", paymentTokenMatch[0])
+              const paymentToken = paymentTokenMatch[0]
+              logger.process('Detected payment token (JWT)', { token: paymentToken.substring(0, 50) + '...' })
+              
+              // Decode payment token if it's a JWT
+              if (DECODE_JWT) {
+                try {
+                  const tokenParts = paymentToken.split('.')
+                  if (tokenParts.length === 3) {
+                    const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString())
+                    logger.debug('Payment token JWT payload', payload)
+                  }
+                } catch {
+                  logger.warn('Payment token is not a valid JWT')
+                }
+              }
             }
             
             return response
           } catch (error) {
-            console.error(">>>> Error calling data provider:", error)
+            logger.error('Error calling data provider', error)
             return {
               error: true,
               message: error instanceof Error ? error.message : "Unknown error"
@@ -392,7 +455,7 @@ async function runAgentA(message: string) {
           paymentToken: z.string().describe("The exact payment token received from the data provider")
         }),
         execute: async ({ paymentToken }) => {
-          console.log(">>>> Executing payment for token:", paymentToken)
+          logger.transaction('Executing payment', { token: paymentToken })
           
           try {
             // Decode the payment token to see its contents if flag is enabled
@@ -401,30 +464,28 @@ async function runAgentA(message: string) {
               if (tokenParts.length === 3) {
                 try {
                   const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString())
-                  console.log("    Decoded JWT payload:", JSON.stringify(payload, null, 2))
+                  logger.debug('Decoded JWT payload', payload)
                 } catch {
-                  console.log("    Could not decode payment token as JWT")
+                  logger.warn('Could not decode payment token as JWT')
                 }
               }
             }
             
             const result = await agentASdk.executePayment(paymentToken)
-            console.log(">>>> Payment successful! Receipt ID:", result.receipt.id)
-            
-            // For demo purposes, we'll extract the amount from context
-            // In a real implementation, this would come from the payment result
-            console.log("    Payment confirmed")
+
+            const receiptJwt = result.receipt
+            logger.success('Payment successful!', `Receipt ID: ${receiptJwt}`)
             
             return {
               success: true,
-              receiptId: result.receipt.id,
+              receiptId: receiptJwt,
               message: "Payment completed successfully"
             }
           } catch (error) {
-            console.error(">>>> Payment failed:", error)
+            logger.error('Payment failed', error)
             
             if (error instanceof Error) {
-              console.error("    Error message:", error.message)
+              logger.error('Error details', error.message)
             }
             
             const errorWithResponse = error as { response?: { data?: unknown } }
@@ -448,25 +509,27 @@ export function startAgentServers() {
   // Start Agent A server on port 7576
   serveAgent({
     port: 7576,
-    runAgent: runAgentA
+    runAgent: runAgentA,
+    decodeJwt: DECODE_JWT
   })
 
   // Start Agent B server on port 7577
   serveAuthedAgent({
     port: 7577,
     runAgent: runAgentB,
-    sdk: agentBSdk
+    sdk: agentBSdk,
+    decodeJwt: DECODE_JWT
   })
 
-  console.log("✅ Agent servers started:")
-  console.log("   - Agent A (Researcher): http://localhost:7576")
-  console.log("   - Agent B (Data Provider): http://localhost:7577")
-  console.log("")
-  console.log("The web UI can now communicate with these agents.")
+  logger.section('AGENT SERVERS STARTED')
+  logger.server('Agent A (Researcher)', 'http://localhost:7576')
+  logger.server('Agent B (Data Provider)', 'http://localhost:7577')
+  logger.info('Demos are now ready to communicate with these agents.')
+  logger.separator()
 }
 
 // Export additional data for the UI
-export { dataCatalogue, RESEARCHER_BUDGET, MIN_PRICES }
+export { dataCatalogue, RESEARCHER_BUDGET, MIN_PRICES, DECODE_JWT }
 
 // If this file is run directly, start the servers
 if (import.meta.url === `file://${process.argv[1]}`) {
