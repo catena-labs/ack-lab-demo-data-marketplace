@@ -17,7 +17,7 @@ const MIN_PRICES = {
 
 // Agent B SDK instance for payment handling
 const agentBSdk = new AckLabSdk({
-  // baseUrl: "https://api.ack-lab.com",
+  baseUrl: "https://api.ack-lab.com",
   clientId: process.env.CLIENT_ID_AGENT_B!,
   clientSecret: process.env.CLIENT_SECRET_AGENT_B!
 })
@@ -130,7 +130,11 @@ async function runAgentB(message: string) {
     Minimum prices (do not go below these):
     - Housing data: $${MIN_PRICES.housing}
     - Ticker data: $${MIN_PRICES.ticker}
-    - LLM paper: $${MIN_PRICES.llm_paper}`,
+    - LLM paper: $${MIN_PRICES.llm_paper}
+    
+    IMPORTANT:
+    - Payment token should be provided as a JWT between <payment_token> and </payment_token> markers.
+    - Receipt ID should be provided as a JWT between <receipt_id> and </receipt_id> markers.`,
     prompt: message,
     tools: {
       findMatchingResource: tool({
@@ -373,7 +377,7 @@ async function runAgentB(message: string) {
 
 // Agent A SDK instance
 const agentASdk = new AckLabSdk({
-  // baseUrl: "https://api.ack-lab.com",
+  baseUrl: "https://api.ack-lab.com",
   clientId: process.env.CLIENT_ID_AGENT_A!,
   clientSecret: process.env.CLIENT_SECRET_AGENT_A!
 })
@@ -404,7 +408,9 @@ async function runAgentA(message: string) {
     - Be willing to go up to your budget limit
     - If they counter-offer at or below your budget, accept it
     
-    IMPORTANT: Always use the exact paymentToken provided by the data provider.`,
+    IMPORTANT: Always use the exact paymentToken provided by the data provider.
+    - Provide a payment token in a structured format between <payment_token> and </payment_token> markers.
+    - Provide the receipt ID in a structured format between <receipt_id> and </receipt_id> markers.`,
     prompt: message,
     tools: {
       callDataProvider: tool({
