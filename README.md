@@ -2,8 +2,6 @@
 
 ![Agent Commerce Kit](./assets/README-Header.png)
 
-[![Run on Replit](https://replit.com/badge?caption=Run%20on%20Replit)](https://replit.new/github.com/catena-labs/ack-data-marketplace-demo)
-
 A demonstration of secure agent-to-agent commerce where autonomous AI agents negotiate and transact data purchases with built-in authentication and payment processing.
 
 > ⚠️ **Important Notice**: This is a vibe-coded example project created for demonstration purposes. Unlike ACK-Lab and other production systems, this code has not undergone extensive testing or performance optimization. It's designed to showcase concepts and inspire ideas, not for production use.
@@ -11,10 +9,9 @@ A demonstration of secure agent-to-agent commerce where autonomous AI agents neg
 ## 🚀 Quick Start
 
 ### 1. Run on Replit (Easiest)
-If you're on Replit already, proceed to Step 2.
+If you're on Replit already, proceed to Step 2. If you're on Github, click the button below to clone thi repo to Replit.
 
-If you're on Github, click the button below to clone thi repo to Replit.
-[![Run on Replit](https://replit.com/badge?caption=Run%20on%20Replit)](https://replit.new/github.com/catena-labs/ack-data-marketplace-demo)
+[![Run on Replit](https://replit.com/badge?caption=Run%20on%20Replit)](https://replit.new/github.com/catena-labs/ack-lab-demo-data-marketplace)
 
 ### 2. Get Your Credentials
 1. Go to [ack-lab.catenalabs.com](https://ack-lab.catenalabs.com)
