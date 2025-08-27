@@ -34,7 +34,7 @@ const dataCatalogue = [
   }
 ];
 
-const RESEARCHER_BUDGET = parseInt(process.env.RESEARCHER_BUDGET || "10");
+const BUYER_BUDGET = parseInt(process.env.BUYER_BUDGET || "10");
 const MIN_PRICES = {
   housing: 8,
   ticker: 10,
@@ -44,7 +44,7 @@ const MIN_PRICES = {
 // This route provides configuration data from the actual agents server
 export async function GET() {
   return NextResponse.json({
-    researcherBudget: RESEARCHER_BUDGET,
+    buyerBudget: BUYER_BUDGET,
     minPrices: MIN_PRICES,
     dataCatalogue: dataCatalogue,
     agentAUrl: 'http://localhost:7576',

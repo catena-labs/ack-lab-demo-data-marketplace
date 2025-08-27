@@ -1,10 +1,12 @@
 # ACK Data Marketplace Demo
 
-![Agent Commerce Kit](https://github.com/agentcommercekit/ack/raw/main/assets/readme-hero.png)
+![Agent Commerce Kit](./assets/README-Header.png)
 
 [![Run on Replit](https://replit.com/badge?caption=Run%20on%20Replit)](https://replit.new/github.com/catena-labs/ack-data-marketplace-demo)
 
 A demonstration of secure agent-to-agent commerce where autonomous AI agents negotiate and transact data purchases with built-in authentication and payment processing.
+
+> ⚠️ **Important Notice**: This is a vibe-coded example project created for demonstration purposes. Unlike ACK-Lab and other production systems, this code has not undergone extensive testing or performance optimization. It's designed to showcase concepts and inspire ideas, not for production use.
 
 ## 🚀 Quick Start
 
@@ -33,8 +35,8 @@ A demonstration of secure agent-to-agent commerce where autonomous AI agents neg
 
 Watch two AI agents negotiate a data marketplace transaction:
 
-- **Agent A (Researcher)**: Has a budget and needs research data
-- **Agent B (Data Provider)**: Offers premium datasets at negotiable prices
+- **Agent A (Marketplace Buyer)**: Has a budget and needs data resources
+- **Agent B (Marketplace Seller)**: Offers premium datasets at negotiable prices
 - **Real Payments**: Agents use ACK-Lab to process actual transactions
 - **Secure Communication**: All agent-to-agent messages are authenticated and encrypted
 
@@ -54,8 +56,9 @@ The demo spins up two independent agent servers that communicate via HTTP endpoi
 ```
 ┌─────────────────┐                      ┌─────────────────┐
 │   Agent A       │  HTTP POST /chat     │   Agent B       │
-│  (Researcher)   │─────────────────────▶│ (Data Provider) │
-│  Port: 7576     │◀─────────────────────│  Port: 7577     │
+│ (Marketplace    │─────────────────────▶│ (Marketplace    │
+│    Buyer)       │◀─────────────────────│    Seller)      │
+│  Port: 7576     │                       │  Port: 7577     │
 └─────────────────┘  Negotiation Flow    └─────────────────┘
         │                                          │
         └──────────────────┬───────────────────────┘
@@ -76,7 +79,7 @@ CLIENT_ID_AGENT_A=your_agent_a_client_id
 CLIENT_SECRET_AGENT_A=your_agent_a_client_secret
 CLIENT_ID_AGENT_B=your_agent_b_client_id  
 CLIENT_SECRET_AGENT_B=your_agent_b_client_secret
-RESEARCHER_BUDGET=275  # Optional: Set custom budget (default: 275)
+BUYER_BUDGET=10  # Optional: Set custom budget (default: 10)
 ```
 
 ### Replit Port Configuration

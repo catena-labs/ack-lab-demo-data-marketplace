@@ -107,7 +107,7 @@ print_color "$BLUE" "🔧 Checking required credentials..."
 
 # Required environment variables
 REQUIRED_VARS=("ANTHROPIC_API_KEY" "CLIENT_ID_AGENT_A" "CLIENT_SECRET_AGENT_A" "CLIENT_ID_AGENT_B" "CLIENT_SECRET_AGENT_B")
-OPTIONAL_VARS=("RESEARCHER_BUDGET")
+OPTIONAL_VARS=("BUYER_BUDGET")
 MISSING_VARS=()
 
 # Check which variables are missing
@@ -124,8 +124,8 @@ if [ ${#MISSING_VARS[@]} -gt 0 ]; then
     print_color "$BLUE" "This demo requires:"
     print_color "$BLUE" "• Anthropic API Key for AI capabilities (claude-sonnet model)"
     print_color "$BLUE" "• ACK Lab SDK credentials for two agents:"
-    print_color "$BLUE" "  - Agent A: Researcher agent with a configurable budget (default \$10)"
-    print_color "$BLUE" "  - Agent B: Data provider agent with research resources"
+    print_color "$BLUE" "  - Agent A: Marketplace buyer agent with a configurable budget (default \$10)"
+    print_color "$BLUE" "  - Agent B: Marketplace seller agent with data resources"
     echo ""
     print_color "$BLUE" "Get Anthropic API key from: https://console.anthropic.com/"
     print_color "$BLUE" "Get ACK Lab credentials from: https://ack-lab.catenalabs.com"
@@ -137,16 +137,16 @@ if [ ${#MISSING_VARS[@]} -gt 0 ]; then
                 print_color "$CYAN" "Enter your Anthropic API Key:"
                 ;;
             "CLIENT_ID_AGENT_A")
-                print_color "$CYAN" "Enter CLIENT_ID for Agent A (Researcher):"
+                print_color "$CYAN" "Enter CLIENT_ID for Agent A (Marketplace Buyer):"
                 ;;
             "CLIENT_SECRET_AGENT_A")
-                print_color "$CYAN" "Enter CLIENT_SECRET for Agent A (Researcher):"
+                print_color "$CYAN" "Enter CLIENT_SECRET for Agent A (Marketplace Buyer):"
                 ;;
             "CLIENT_ID_AGENT_B")
-                print_color "$CYAN" "Enter CLIENT_ID for Agent B (Data Provider):"
+                print_color "$CYAN" "Enter CLIENT_ID for Agent B (Marketplace Seller):"
                 ;;
             "CLIENT_SECRET_AGENT_B")
-                print_color "$CYAN" "Enter CLIENT_SECRET for Agent B (Data Provider):"
+                print_color "$CYAN" "Enter CLIENT_SECRET for Agent B (Marketplace Seller):"
                 ;;
         esac
         
@@ -176,10 +176,10 @@ else
     print_color "$GREEN" "✅ All required credentials are configured"
 fi
 
-# Check optional RESEARCHER_BUDGET
-if [ -z "$RESEARCHER_BUDGET" ] && ! grep -q "^RESEARCHER_BUDGET=" .env 2>/dev/null; then
-    print_color "$CYAN" "\n💰 Researcher Budget Configuration"
-    print_color "$YELLOW" "Set the budget for the researcher agent (default: \$10)"
+# Check optional BUYER_BUDGET
+if [ -z "$BUYER_BUDGET" ] && ! grep -q "^BUYER_BUDGET=" .env 2>/dev/null; then
+    print_color "$CYAN" "\n💰 Buyer Budget Configuration"
+    print_color "$YELLOW" "Set the budget for the marketplace buyer agent (default: \$10)"
     print_color "$YELLOW" "Press Enter to use the default value of \$10"
     read -p "> \$" budget_value
     
@@ -198,7 +198,7 @@ if [ -z "$RESEARCHER_BUDGET" ] && ! grep -q "^RESEARCHER_BUDGET=" .env 2>/dev/nu
     fi
     
     # Save to .env
-    echo "RESEARCHER_BUDGET=$budget_value" >> .env
+    echo "BUYER_BUDGET=$budget_value" >> .env
     
     # Reload environment
     set -a
@@ -271,13 +271,13 @@ echo ""
 print_color "$BLUE" "🎯 Starting Data Negotiation Agents Server..."
 print_color "$YELLOW" "This will start two agent servers:"
 # Get the budget value from environment
-if [ -n "$RESEARCHER_BUDGET" ]; then
-    BUDGET_DISPLAY="\$$RESEARCHER_BUDGET"
+if [ -n "$BUYER_BUDGET" ]; then
+    BUDGET_DISPLAY="\$$BUYER_BUDGET"
 else
     BUDGET_DISPLAY="\$10"
 fi
-print_color "$YELLOW" "• Agent A (Researcher): Port 7576 - Has a $BUDGET_DISPLAY budget"
-print_color "$YELLOW" "• Agent B (Data Provider): Port 7577 - Offers research resources"
+print_color "$YELLOW" "• Agent A (Marketplace Buyer): Port 7576 - Has a $BUDGET_DISPLAY budget"
+print_color "$YELLOW" "• Agent B (Marketplace Seller): Port 7577 - Offers data resources"
 echo ""
 
 # Start the agents server in the background
@@ -317,11 +317,11 @@ fi
 print_color "$BLUE" "\nAgent Server Endpoints:"
 if [ "$ENVIRONMENT" = "replit" ]; then
     # On Replit, ports are forwarded: 7576->3000, 7577->3001
-    print_color "$GREEN" "  • Agent A (Researcher): https://$REPLIT_DEV_DOMAIN:3000"
-    print_color "$GREEN" "  • Agent B (Data Provider): https://$REPLIT_DEV_DOMAIN:3001"
+    print_color "$GREEN" "  • Agent A (Marketplace Buyer): https://$REPLIT_DEV_DOMAIN:3000"
+    print_color "$GREEN" "  • Agent B (Marketplace Seller): https://$REPLIT_DEV_DOMAIN:3001"
 else
-    print_color "$GREEN" "  • Agent A (Researcher): http://localhost:7576"
-    print_color "$GREEN" "  • Agent B (Data Provider): http://localhost:7577"
+    print_color "$GREEN" "  • Agent A (Marketplace Buyer): http://localhost:7576"
+    print_color "$GREEN" "  • Agent B (Marketplace Seller): http://localhost:7577"
 fi
 
 echo ""
@@ -330,10 +330,10 @@ print_color "$CYAN" "  1. US Housing Market Inventory 2024 - \$300 (negotiable t
 print_color "$CYAN" "  2. SPY Ticker Data (365 days) - \$350 (negotiable to \$250)"
 print_color "$CYAN" "  3. LLM Benchmarking Study 2024 - \$200 (negotiable to \$150)"
 # Display actual budget from environment
-if [ -n "$RESEARCHER_BUDGET" ]; then
-    print_color "$YELLOW" "  💰 Researcher Budget: \$$RESEARCHER_BUDGET"
+if [ -n "$BUYER_BUDGET" ]; then
+    print_color "$YELLOW" "  💰 Buyer Budget: \$$BUYER_BUDGET"
 else
-    print_color "$YELLOW" "  💰 Researcher Budget: \$10 (default)"
+    print_color "$YELLOW" "  💰 Buyer Budget: \$10 (default)"
 fi
 
 echo ""

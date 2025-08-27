@@ -31,7 +31,7 @@ const categoryIcons = {
 
 interface NegotiationStep {
   id: string
-  type: 'researcher' | 'provider' | 'system' | 'agent'
+  type: 'buyer' | 'seller' | 'system' | 'agent'
   message: string
   price?: number
   action?: 'offer' | 'counter' | 'accept' | 'payment' | 'complete' | 'inquiry'
@@ -62,7 +62,7 @@ export function DataNegotiationInterface() {
   // Receipt ID is logged but not displayed in UI currently
   const [, setReceiptId] = useState<string | null>(null)
   const [negotiationPhase, setNegotiationPhase] = useState<'browsing' | 'negotiating' | 'payment' | 'complete'>('browsing')
-  const [researcherBudget, setResearcherBudget] = useState<number>(10)
+  const [buyerBudget, setBuyerBudget] = useState<number>(10)
   const [purchasedData, setPurchasedData] = useState<PurchasedData[]>([])
   const [dataCatalogue, setDataCatalogue] = useState<Array<{
     id: string
@@ -81,8 +81,8 @@ export function DataNegotiationInterface() {
     fetch('/api/config')
       .then(res => res.json())
       .then(data => {
-        if (data.researcherBudget) {
-          setResearcherBudget(data.researcherBudget);
+        if (data.buyerBudget) {
+          setBuyerBudget(data.buyerBudget);
         }
         if (data.dataCatalogue) {
           // Add icons to the catalogue items
@@ -199,7 +199,7 @@ export function DataNegotiationInterface() {
         setCurrentOffer(lastPrice)
         
         // If price is over budget, auto-negotiate
-        if (lastPrice > researcherBudget && !data.paymentToken) {
+        if (lastPrice > buyerBudget && !data.paymentToken) {
           setTimeout(() => continueNegotiation(), 2000)
         }
       }
@@ -278,7 +278,7 @@ export function DataNegotiationInterface() {
         setCurrentOffer(lastPrice)
         
         // Continue negotiation if needed
-        if (lastPrice > researcherBudget && !data.status?.includes('accept')) {
+        if (lastPrice > buyerBudget && !data.status?.includes('accept')) {
           setTimeout(() => continueNegotiation(), 2000)
         }
       }
@@ -383,12 +383,12 @@ export function DataNegotiationInterface() {
           <div>
             <h2 className="text-2xl font-bold mb-2">Data Negotiation Marketplace</h2>
             <p className="text-gray-600">
-              AI agents negotiate data prices in real-time. Budget: ${researcherBudget}
+              AI agents negotiate data prices in real-time. Budget: ${buyerBudget}
             </p>
           </div>
           <Badge variant="outline" className="text-lg px-3 py-1">
             <DollarSign className="w-4 h-4 mr-1" />
-            Research Budget: ${researcherBudget}
+            Buyer Budget: ${buyerBudget}
           </Badge>
         </div>
 
@@ -435,7 +435,7 @@ export function DataNegotiationInterface() {
             ) : (
               dataCatalogue.map(resource => {
                 const Icon = resource.icon
-                const isOverBudget = resource.listPrice > researcherBudget
+                const isOverBudget = resource.listPrice > buyerBudget
                 
                 return (
                   <Card key={resource.id} className="p-4">
@@ -516,16 +516,16 @@ export function DataNegotiationInterface() {
                     <div
                       key={step.id}
                       className={`p-3 rounded-lg ${
-                        step.type === 'researcher' ? 'bg-blue-50 border border-blue-200 ml-8' :
-                        step.type === 'provider' ? 'bg-green-50 border border-green-200 mr-8' :
+                        step.type === 'buyer' ? 'bg-blue-50 border border-blue-200 ml-8' :
+                        step.type === 'seller' ? 'bg-green-50 border border-green-200 mr-8' :
                         step.type === 'agent' ? 'bg-purple-50 border border-purple-200' :
                         'bg-gray-50 border border-gray-200'
                       }`}
                     >
                       <div className="flex items-start justify-between mb-1">
                         <span className="font-semibold text-sm text-gray-700">
-                          {step.type === 'researcher' ? '🔬 Researcher Agent' :
-                           step.type === 'provider' ? '📊 Data Provider' :
+                          {step.type === 'buyer' ? '🛒 Marketplace Buyer' :
+                           step.type === 'seller' ? '🏪 Marketplace Seller' :
                            step.type === 'agent' ? '🤖 Agent Response' :
                            '⚙️ System'}
                         </span>

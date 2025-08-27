@@ -21,8 +21,8 @@ This web UI provides a visual, interactive demonstration of automated data negot
    ```
    
    This will start:
-   - Agent A (Researcher) on `http://localhost:7576`
-   - Agent B (Data Provider) on `http://localhost:7577`
+   - Agent A (Marketplace Buyer) on `http://localhost:7576`
+   - Agent B (Marketplace Seller) on `http://localhost:7577`
 
 2. **Install Web UI Dependencies** (in a new terminal, from the web-ui directory):
    ```bash
@@ -76,7 +76,8 @@ Once a negotiation completes successfully:
 ```
 ┌─────────────┐     ┌──────────────┐     ┌──────────────┐
 │   Web UI    │────▶│   Agent A    │────▶│   Agent B    │
-│  (Next.js)  │     │ (Researcher) │     │(Data Provider│
+│  (Next.js)  │     │(Marketplace  │     │(Marketplace  │
+│             │     │   Buyer)     │     │   Seller)    │
 └─────────────┘     └──────────────┘     └──────────────┘
                           │                      │
                           └─────── SDK ──────────┘
@@ -109,7 +110,7 @@ web-ui/
 ## 🔧 Configuration
 
 The system uses environment variables for configuration:
-- `RESEARCHER_BUDGET`: Maximum budget for Agent A (default: $10)
+- `BUYER_BUDGET`: Maximum budget for Agent A (default: $10)
 
 Minimum prices are configured in the server:
 - Housing data: $8
