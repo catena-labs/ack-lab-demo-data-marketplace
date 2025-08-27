@@ -22,7 +22,7 @@ A demonstration of secure agent-to-agent commerce where autonomous AI agents neg
 ### 3. Configure & Run
 1. Click "Run" on Replit (or run `./setup-and-run.sh` locally)
 2. Enter your credentials when prompted:
-   - Anthropic API key
+   - Anthropic API key. Note: This demo requires `claude-sonnet-4-20250514`. We cannot guarantee it works end-to-end with smaller models from Anthropic or other providers.
    - Agent A client ID & secret  
    - Agent B client ID & secret
 3. Choose your demo mode (CLI or Web UI)
