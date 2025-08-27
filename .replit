@@ -1,4 +1,3 @@
-modules = ["nodejs-18"]
 run = "./setup-and-run.sh"
 
 [nix]
@@ -20,4 +19,4 @@ localPort = 3000
 externalPort = 80
 
 [gitHubImport]
-requiredFiles = [".replit"]
+requiredFiles = [".replit", "replit.nix"]
