@@ -130,6 +130,35 @@ if [ ${#MISSING_VARS[@]} -gt 0 ]; then
     print_color "$BLUE" "Get Anthropic API key from: https://console.anthropic.com/"
     print_color "$BLUE" "Get ACK Lab credentials from: https://ack-lab.catenalabs.com"
     echo ""
+    
+    # Check if running on Replit for security guidance
+    if [ -n "$REPLIT_DEV_DOMAIN" ]; then
+        print_color "$CYAN" "🔒 SECURITY NOTICE: You're running on Replit!"
+        print_color "$YELLOW" "For security, please use Replit's Secrets tool instead of entering credentials here:"
+        print_color "$YELLOW" "1. Click the 'Secrets' tab in the left sidebar (lock icon)"
+        print_color "$YELLOW" "2. Add each of these environment variables as secrets:"
+        for var in "${MISSING_VARS[@]}"; do
+            print_color "$YELLOW" "   - $var"
+        done
+        print_color "$YELLOW" "3. After adding all secrets, restart this script"
+        echo ""
+        print_color "$RED" "⚠️  DO NOT enter sensitive credentials in the console on Replit!"
+        print_color "$RED" "⚠️  Free Replit projects are public - your .env file would be visible to everyone!"
+        echo ""
+        print_color "$CYAN" "Would you like to:"
+        print_color "$CYAN" "1. Exit now to set up secrets (recommended)"
+        print_color "$CYAN" "2. Continue anyway and enter credentials (NOT RECOMMENDED)"
+        read -p "Enter your choice (1 or 2): " replit_choice
+        
+        if [ "$replit_choice" != "2" ]; then
+            print_color "$GREEN" "✅ Good choice! Please set up your secrets and run this script again."
+            print_color "$BLUE" "After setting up secrets, run: ./setup-and-run.sh"
+            exit 0
+        else
+            print_color "$YELLOW" "⚠️  Proceeding with manual entry (not recommended for security)"
+            echo ""
+        fi
+    fi
 
     for var in "${MISSING_VARS[@]}"; do
         case $var in
@@ -173,13 +202,22 @@ if [ ${#MISSING_VARS[@]} -gt 0 ]; then
     source .env 2>/dev/null || true
     set +a
 else
-    print_color "$GREEN" "✅ All required credentials are configured"
+    if [ -n "$REPLIT_DEV_DOMAIN" ]; then
+        print_color "$GREEN" "✅ All required credentials are configured (via Replit Secrets)"
+    else
+        print_color "$GREEN" "✅ All required credentials are configured"
+    fi
 fi
 
 # Check optional BUYER_BUDGET
 if [ -z "$BUYER_BUDGET" ] && ! grep -q "^BUYER_BUDGET=" .env 2>/dev/null; then
     print_color "$CYAN" "\n💰 Buyer Budget Configuration"
-    print_color "$YELLOW" "Set the budget for the marketplace buyer agent (default: \$10)"
+    if [ -n "$REPLIT_DEV_DOMAIN" ]; then
+        print_color "$YELLOW" "Set the budget for the marketplace buyer agent (default: \$10)"
+        print_color "$YELLOW" "Note: BUYER_BUDGET is non-sensitive and safe to store in .env on Replit"
+    else
+        print_color "$YELLOW" "Set the budget for the marketplace buyer agent (default: \$10)"
+    fi
     print_color "$YELLOW" "Press Enter to use the default value of \$10"
     read -p "> \$" budget_value
     
