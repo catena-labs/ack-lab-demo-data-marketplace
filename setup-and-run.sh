@@ -337,100 +337,15 @@ else
 fi
 
 echo ""
-print_color "$BLUE" "🎮 Choose how to interact with the demo:"
-print_color "$GREEN" "  1. CLI Demo - Interactive command-line interface"
-print_color "$GREEN" "  2. Web UI - Visual web interface (requires additional setup)"
-print_color "$GREEN" "  3. Exit - Stop the demo"
-echo ""
-print_color "$YELLOW" "💡 Tip: You can force exit at any time with Ctrl+C"
-echo ""
+print_color "$GREEN" "🚀 Ready to start CLI Demo..."
+print_color "$YELLOW" "You can interact with the agents directly from the command line."
+print_color "$YELLOW" "Type /exit to quit the CLI demo."
+print_color "$CYAN" "Or use Ctrl+C to force exit the demo.\n"
 
-while true; do
-    read -p "$(print_color "$CYAN" "Enter your choice (1/2/3): ")" choice
-    
-    case $choice in
-        1)
-            print_color "$GREEN" "\n🚀 Starting CLI Demo..."
-            print_color "$YELLOW" "You can interact with the agents directly from the command line."
-            print_color "$YELLOW" "Type /exit to quit the CLI demo and return to this menu."
-            print_color "$CYAN" "Or use Ctrl+C to force exit the demo.\n"
-            
-            # Run the CLI demo
-            npx tsx cli-demos/data-negotiation-demo.ts
-            
-            echo ""
-            print_color "$BLUE" "CLI Demo finished. What would you like to do next?"
-            print_color "$GREEN" "  1. CLI Demo - Run again"
-            print_color "$GREEN" "  2. Web UI - Try the visual interface"
-            print_color "$GREEN" "  3. Exit - Stop the demo"
-            echo ""
-            ;;
-            
-        2)
-            print_color "$GREEN" "\n🌐 Setting up Web UI..."
-            
-            # Check if web-ui directory exists
-            if [ ! -d "web-ui" ]; then
-                print_color "$RED" "❌ web-ui directory not found!"
-                continue
-            fi
-            
-            # Install web UI dependencies if needed
-            if [ ! -d "web-ui/node_modules" ] || [ "web-ui/package.json" -nt "web-ui/node_modules" ]; then
-                print_color "$YELLOW" "📦 Installing Web UI dependencies..."
-                cd web-ui
-                npm install
-                cd ..
-                
-                if [ $? -eq 0 ]; then
-                    print_color "$GREEN" "✅ Web UI dependencies installed"
-                else
-                    print_color "$RED" "❌ Failed to install Web UI dependencies"
-                    continue
-                fi
-            fi
-            
-            print_color "$GREEN" "🚀 Starting Web UI..."
-            if [ "$ENVIRONMENT" = "replit" ]; then
-                # On Replit, port 3000 is forwarded to port 80
-                print_color "$YELLOW" "The web interface will open at https://$REPLIT_DEV_DOMAIN"
-            else
-                print_color "$YELLOW" "The web interface will open at http://localhost:3000"
-            fi
-            print_color "$YELLOW" "Press Ctrl+C to stop the Web UI and return to this menu.\n"
-            
-            # Start the web UI
-            cd web-ui
-            npm run dev
-            cd ..
-            
-            echo ""
-            print_color "$BLUE" "Web UI stopped. What would you like to do next?"
-            print_color "$GREEN" "  1. CLI Demo - Try the command-line interface"
-            print_color "$GREEN" "  2. Web UI - Run again"
-            print_color "$GREEN" "  3. Exit - Stop the demo"
-            echo ""
-            ;;
-            
-        3)
-            print_color "$YELLOW" "\n👋 Shutting down..."
-            
-            # Kill the agents server
-            if [ -n "$AGENTS_PID" ]; then
-                kill $AGENTS_PID 2>/dev/null
-                print_color "$GREEN" "✅ Agent servers stopped"
-            fi
-            
-            print_color "$BLUE" "Thanks for trying the ACK Data Marketplace Demo!"
-            print_color "$CYAN" "\n📖 Quick Reference:"
-            print_color "$CYAN" "  • Exit shortcut: Ctrl+C (works on all platforms: Windows/Linux/Mac)"
-            print_color "$CYAN" "  • Restart demo: Run ./setup-and-run.sh again"
-            print_color "$CYAN" "  • Documentation: Check README.md for more details\n"
-            exit 0
-            ;;
-            
-        *)
-            print_color "$RED" "Invalid choice. Please enter 1, 2, or 3."
-            ;;
-    esac
-done
+print_color "$CYAN" "Press Enter to start the demo..."
+read
+
+print_color "$GREEN" "🚀 Starting CLI Demo...\n"
+
+# Run the CLI demo
+npx tsx cli-demos/data-negotiation-demo.ts
