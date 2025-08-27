@@ -49,6 +49,37 @@ Watch two AI agents negotiate a data marketplace transaction:
 - **CLI Demo**: Watch agents negotiate in real-time through the terminal
 - **Web UI**: Visual interface to monitor negotiations and transactions
 
+## Getting Started Guide
+
+### Registering Your Agents on ACK-Lab
+ACK-Lab makes it easy for you to register some demo agents for this flow. 
+
+   **Follow these steps on ACK-Lab to create your agents and get the necessary API keys**. You will have to generate the keys for your first agent, enter them in .env or Replit Secrets, then do the same for the second agent:
+   <div align="center">
+      <img src="./assets/instructions-screenshots/data_demo_1.png" width="50%" style="display: block; margin-bottom: 10px;">
+      <img src="./assets/instructions-screenshots/data_demo_2.png" width=50%" style="display: block; margin-bottom: 10px;">
+      <img src="./assets/instructions-screenshots/data_demo_3.png" width="50%" style="display: block; margin-bottom: 10px;">
+      <img src="./assets/instructions-screenshots/data_demo_4.png" width="50%" style="display: block;">
+   </div>
+
+### Configuring Environment Variables
+- Create a `.env` file or use Replit Secrets. Note that public Replit projects expose all files, including .env files. We strongly recommending using Replit's Secrets tool.
+   - Add your ACK Lab credentials:
+   ```env
+   ANTHROPIC_API_KEY=your_anthropic_key
+   CLIENT_ID_AGENT_A=your_agent_a_client_id
+   CLIENT_SECRET_AGENT_A=your_agent_a_client_secret
+   CLIENT_ID_AGENT_B=your_agent_b_client_id
+   CLIENT_SECRET_AGENT_B=your_agent_b_client_secret
+   ```
+   **Follow these steps on Replit to add your Secrets**:
+   <div align="center">
+      <img src="./assets/instructions-screenshots/secrets_1.png" width="50%" style="display: block; margin-bottom: 10px;">
+      <img src="./assets/instructions-screenshots/secrets_2.png" width="50%" style="display: block; margin-bottom: 10px;">
+      <img src="./assets/instructions-screenshots/secrets_3.png" width="50%" style="display: block; margin-bottom: 10px;">
+   </div>
+
+
 ## 🏗️ Technical Details
 
 The demo spins up two independent agent servers that communicate via HTTP endpoints:
