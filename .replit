@@ -1,7 +1,7 @@
 run = "./setup-and-run.sh"
 
 [nix]
-channel = "stable-25_05"
+channel = "stable-24_11"
 
 [deployment]
 run = ["sh", "-c", "./setup-and-run.sh"]
