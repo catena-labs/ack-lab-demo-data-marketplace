@@ -28,7 +28,7 @@ If you're on Github, click the button below to clone thi repo to Replit.
    - Anthropic API key. Note: This demo requires `claude-sonnet-4-20250514`. We cannot guarantee it works end-to-end with smaller models from Anthropic or other providers.
    - Agent A client ID & secret  
    - Agent B client ID & secret
-3. Choose your demo mode (CLI or Web UI)
+3. Start the CLI demo
 
 <div align="center">
   <img src="./assets/replit-run-icon.png" alt="Get Started on Replit" width="100">
@@ -48,9 +48,8 @@ Watch two AI agents negotiate a data marketplace transaction:
 2. **SPY Ticker Data (365 days)**: $350 (negotiable down to $250)  
 3. **LLM Benchmarking Study 2024**: $200 (negotiable down to $150)
 
-### Demo Modes
+### Demo Mode
 - **CLI Demo**: Watch agents negotiate in real-time through the terminal
-- **Web UI**: Visual interface to monitor negotiations and transactions
 
 ## Getting Started Guide
 
@@ -118,8 +117,7 @@ BUYER_BUDGET=10  # Optional: Set custom budget (default: 10)
 
 ### Replit Port Configuration
 - **Agent A**: Internal port 7576 → External port 3000
-- **Agent B**: Internal port 7577 → External port 3001  
-- **Web UI**: Internal port 3000 → External port 80
+- **Agent B**: Internal port 7577 → External port 3001
 
 ## 💻 Local Development
 
@@ -137,7 +135,6 @@ cd ack-private-data-marketplace
 ### Local Access Points
 - Agent A: `http://localhost:7576`
 - Agent B: `http://localhost:7577`
-- Web UI: `http://localhost:3000`
 
 ## 🐛 Troubleshooting
 

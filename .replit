@@ -15,9 +15,7 @@ externalPort = 3000
 localPort = 7577
 externalPort = 3001
 
-[[ports]]
-localPort = 3000
-externalPort = 80
+
 
 [gitHubImport]
 requiredFiles = [".replit"]
