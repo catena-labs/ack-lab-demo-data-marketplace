@@ -1,8 +1,8 @@
 {
-  "name": "swap-demo",
+  "name": "ack-lab-demo-data-marketplace",
   "version": "1.0.0",
-  "description": "Demo showcasing agent-to-agent communication",
-  "main": "swap-demo.ts",
+  "description": "Ack Lab Demo: Data Marketplace",
+  "main": "data-negotiation-demo.ts",
   "type": "module",
   "scripts": {
     "dev": "./setup-and-run.sh",
