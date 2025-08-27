@@ -90,8 +90,7 @@ BUYER_BUDGET=10  # Optional: Set custom budget (default: 10)
 ## 💻 Local Development
 
 ### Prerequisites
-- Node.js 18+
-- npm or pnpm
+- Node.js 18+ with npm
 - ACK Lab credentials from [ack-lab.catenalabs.com](https://ack-lab.catenalabs.com)
 
 ### Setup
