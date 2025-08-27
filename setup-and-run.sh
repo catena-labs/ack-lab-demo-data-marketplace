@@ -219,12 +219,7 @@ if [ ! -d "node_modules" ] || [ "package.json" -nt "node_modules" ]; then
         exit 1
     fi
     
-    # Check if pnpm is available and use it, otherwise use npm
-    if command -v pnpm &> /dev/null; then
-        pnpm install
-    else
-        npm install
-    fi
+    npm install
     
     if [ $? -eq 0 ]; then
         print_color "$GREEN" "✅ Root dependencies installed successfully"
