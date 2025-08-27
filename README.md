@@ -11,6 +11,9 @@ A demonstration of secure agent-to-agent commerce where autonomous AI agents neg
 ## 🚀 Quick Start
 
 ### 1. Run on Replit (Easiest)
+If you're on Replit already, proceed to Step 2.
+
+If you're on Github, click the button below to clone thi repo to Replit.
 [![Run on Replit](https://replit.com/badge?caption=Run%20on%20Replit)](https://replit.new/github.com/catena-labs/ack-data-marketplace-demo)
 
 ### 2. Get Your Credentials
@@ -63,7 +66,7 @@ ACK-Lab makes it easy for you to register some demo agents for this flow.
    </div>
 
 ### Configuring Environment Variables
-- Create a `.env` file or use Replit Secrets. Note that public Replit projects expose all files, including .env files. We strongly recommending using Replit's Secrets tool.
+- Create a `.env` file or use [Replit Secrets](https://docs.replit.com/replit-workspace/workspace-features/secrets). Note that public Replit projects expose all files, including .env files. We strongly recommend using Replit's Secrets tool.
    - Add your ACK Lab credentials:
    ```env
    ANTHROPIC_API_KEY=your_anthropic_key
