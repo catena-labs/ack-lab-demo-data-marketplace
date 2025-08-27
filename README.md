@@ -9,7 +9,7 @@ A demonstration of secure agent-to-agent commerce where autonomous AI agents neg
 ## 🚀 Quick Start
 
 ### 1. Run on Replit (Easiest)
-If you're on Replit already, proceed to Step 2. If you're on Github, click the button below to clone thi repo to Replit.
+If you're on Replit already, proceed to Step 2. If you're on Github, click the button below to clone this repo to Replit.
 
 [![Run on Replit](https://replit.com/badge?caption=Run%20on%20Replit)](https://replit.new/github.com/catena-labs/ack-lab-demo-data-marketplace)
 
