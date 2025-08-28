@@ -16,8 +16,8 @@ If you're on Replit already, proceed to Step 2. If you're on Github, click the b
 ### 2. Get Your Credentials
 1. Go to [ack-lab.catenalabs.com](https://ack-lab.catenalabs.com)
 2. Sign up for the developer preview
-3. Register two agents through the app flow
-4. Copy your credentials
+3. Register your Data Marketplace agents through the app flow
+4. Copy your credentials (see [Getting Started Guide](#getting-started-guide))
 
 ### 3. Configure & Run
 1. Click "Run" on Replit (or run `./setup-and-run.sh` locally)
