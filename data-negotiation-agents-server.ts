@@ -280,7 +280,7 @@ const sellerTools = {
       
       const { paymentToken } = await agentBSdk.createPaymentRequest(
         agreedPrice * 100,
-        `Purchase: ${resource.name}`
+        { description: `Purchase: ${resource.name}`}
       )
       
       const negotiation = pendingNegotiations.get(negotiationId)
