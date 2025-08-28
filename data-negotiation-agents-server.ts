@@ -21,13 +21,13 @@ const CONFIG = {
   },
   API: {
     baseUrl: "https://api.ack-lab.com",
-    agentA: {
-      clientId: process.env.CLIENT_ID_AGENT_A || "",
-      clientSecret: process.env.CLIENT_SECRET_AGENT_A || ""
+    marketplaceBuyer: {
+      clientId: process.env.CLIENT_ID_MARKETPLACE_BUYER || "",
+      clientSecret: process.env.CLIENT_SECRET_MARKETPLACE_BUYER || ""
     },
-    agentB: {
-      clientId: process.env.CLIENT_ID_AGENT_B || "",
-      clientSecret: process.env.CLIENT_SECRET_AGENT_B || ""
+    marketplaceSeller: {
+      clientId: process.env.CLIENT_ID_MARKETPLACE_SELLER || "",
+      clientSecret: process.env.CLIENT_SECRET_MARKETPLACE_SELLER || ""
     }
   }
 }
@@ -92,10 +92,10 @@ const completedTransactions = new Map<string, { resourceId: string; finalPrice: 
 // ===== SDK Instances =====
 function validateEnvironmentVariables() {
   const required = [
-    'CLIENT_ID_AGENT_A',
-    'CLIENT_SECRET_AGENT_A', 
-    'CLIENT_ID_AGENT_B',
-    'CLIENT_SECRET_AGENT_B'
+    'CLIENT_ID_MARKETPLACE_BUYER',
+    'CLIENT_SECRET_MARKETPLACE_BUYER', 
+    'CLIENT_ID_MARKETPLACE_SELLER',
+    'CLIENT_SECRET_MARKETPLACE_SELLER'
   ]
   
   const missing = required.filter(key => !process.env[key])
@@ -104,19 +104,19 @@ function validateEnvironmentVariables() {
   }
 }
 
-const agentBSdk = new AckLabSdk({
+const marketplaceSellerSdk = new AckLabSdk({
   baseUrl: CONFIG.API.baseUrl,
-  clientId: CONFIG.API.agentB.clientId,
-  clientSecret: CONFIG.API.agentB.clientSecret
+  clientId: CONFIG.API.marketplaceSeller.clientId,
+  clientSecret: CONFIG.API.marketplaceSeller.clientSecret
 })
 
-const agentASdk = new AckLabSdk({
+const marketplaceBuyerSdk = new AckLabSdk({
   baseUrl: CONFIG.API.baseUrl,
-  clientId: CONFIG.API.agentA.clientId,
-  clientSecret: CONFIG.API.agentA.clientSecret
+  clientId: CONFIG.API.marketplaceBuyer.clientId,
+  clientSecret: CONFIG.API.marketplaceBuyer.clientSecret
 })
 
-const callAgent = agentASdk.createAgentCaller(`http://localhost:${CONFIG.PORTS.seller}/chat`)
+const callAgent = marketplaceBuyerSdk.createAgentCaller(`http://localhost:${CONFIG.PORTS.seller}/chat`)
 
 // ===== Helper Functions =====
 function generateAccessToken(resourceId: string): string {
@@ -173,7 +173,7 @@ function findResourceByQuery(query: string): DataResource | undefined {
   return undefined
 }
 
-// ===== Agent B: Marketplace Seller Tools =====
+// ===== Marketplace Seller Tools =====
 const sellerTools = {
   findMatchingResource: tool({
     description: "Find a resource that matches the user's research needs",
@@ -277,7 +277,7 @@ const sellerTools = {
         'Agreed price': `$${agreedPrice}`
       })
       
-      const { paymentToken } = await agentBSdk.createPaymentRequest(
+      const { paymentToken } = await marketplaceSellerSdk.createPaymentRequest(
         agreedPrice * 100,
         { description: `Purchase: ${resource.name}`}
       )
@@ -369,7 +369,7 @@ const sellerTools = {
   })
 }
 
-// ===== Agent A: Marketplace Buyer Tools =====
+// ===== Marketplace Buyer Tools =====
 const buyerTools = {
   callSeller: tool({
     description: "Call the marketplace seller agent to request data or negotiate",
@@ -416,7 +416,7 @@ const buyerTools = {
       logJwtIfEnabled(paymentToken, 'Payment token being executed')
       
       try {
-        const result = await agentASdk.executePayment(paymentToken)
+        const result = await marketplaceBuyerSdk.executePayment(paymentToken)
         const receiptJwt = result.receipt
         
         logger.success('Payment successful!', `Receipt ID: ${receiptJwt}`)
@@ -442,8 +442,8 @@ const buyerTools = {
   })
 }
 
-// ===== Agent B: Marketplace Seller =====
-async function runAgentB(message: string) {
+// ===== Marketplace Seller =====
+async function runMarketplaceSeller(message: string) {
   const catalogueDescription = dataCatalogue
     .map(r => `- ${r.name}: ${r.description} (${r.format}, ${r.size}) - List price: $${r.listPrice}`)
     .join('\n')
@@ -480,8 +480,8 @@ async function runAgentB(message: string) {
   return result.text
 }
 
-// ===== Agent A: Marketplace Buyer =====
-async function runAgentA(message: string) {
+// ===== Marketplace Buyer =====
+async function runMarketplaceBuyer(message: string) {
   const researchTopic = getRandomResearchTopic()
   
   const result = await generateText({
@@ -525,20 +525,20 @@ export function startAgentServers() {
 
   serveAgent({
     port: CONFIG.PORTS.buyer,
-    runAgent: runAgentA,
+    runAgent: runMarketplaceBuyer,
     decodeJwt: CONFIG.DECODE_JWT
   })
 
   serveAuthedAgent({
     port: CONFIG.PORTS.seller,
-    runAgent: runAgentB,
-    sdk: agentBSdk,
+    runAgent: runMarketplaceSeller,
+    sdk: marketplaceSellerSdk,
     decodeJwt: CONFIG.DECODE_JWT
   })
 
   logger.section('AGENT SERVERS STARTED')
-  logger.server('Agent A (Marketplace Buyer)', `http://localhost:${CONFIG.PORTS.buyer}`)
-  logger.server('Agent B (Marketplace Seller)', `http://localhost:${CONFIG.PORTS.seller}`)
+  logger.server('Marketplace Buyer', `http://localhost:${CONFIG.PORTS.buyer}`)
+  logger.server('Marketplace Seller', `http://localhost:${CONFIG.PORTS.seller}`)
   logger.info('Demos are now ready to communicate with these agents.')
   logger.separator()
 }

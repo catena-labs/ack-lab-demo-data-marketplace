@@ -10,8 +10,8 @@ const CONFIG = {
     llm_paper: 12
   },
   AGENTS: {
-    buyer: { port: 7576, name: "Agent A (Marketplace Buyer)" },
-    seller: { port: 7577, name: "Agent B (Marketplace Seller)" }
+    buyer: { port: 7576, name: "Marketplace Buyer" },
+    seller: { port: 7577, name: "Marketplace Seller" }
   },
   HEALTH_CHECK: {
     maxRetries: 10,

@@ -23,8 +23,8 @@ If you're on Replit already, proceed to Step 2. If you're on Github, click the b
 1. Click "Run" on Replit (or run `./setup-and-run.sh` locally)
 2. Enter your credentials when prompted:
    - Anthropic API key. Note: This demo requires `claude-sonnet-4-20250514`. We cannot guarantee it works end-to-end with smaller models from Anthropic or other providers.
-   - Agent A client ID & secret  
-   - Agent B client ID & secret
+   - Marketplace Buyer client ID & secret  
+   - Marketplace Seller client ID & secret
 3. Start the CLI demo
 
 <div align="center">
@@ -35,8 +35,8 @@ If you're on Replit already, proceed to Step 2. If you're on Github, click the b
 
 Watch two AI agents negotiate a data marketplace transaction:
 
-- **Agent A (Marketplace Buyer)**: Has a budget and needs data resources
-- **Agent B (Marketplace Seller)**: Offers premium datasets at negotiable prices
+- **Marketplace Buyer**: Has a budget and needs data resources
+- **Marketplace Seller**: Offers premium datasets at negotiable prices
 - **Real Payments**: Agents use ACK-Lab to process actual transactions
 - **Secure Communication**: All agent-to-agent messages are authenticated and encrypted
 
@@ -66,10 +66,10 @@ ACK-Lab makes it easy for you to register some demo agents for this flow.
    - Add your ACK Lab credentials:
    ```env
    ANTHROPIC_API_KEY=your_anthropic_key
-   CLIENT_ID_AGENT_A=your_agent_a_client_id
-   CLIENT_SECRET_AGENT_A=your_agent_a_client_secret
-   CLIENT_ID_AGENT_B=your_agent_b_client_id
-   CLIENT_SECRET_AGENT_B=your_agent_b_client_secret
+   CLIENT_ID_MARKETPLACE_BUYER=your_marketplace_buyer_client_id
+   CLIENT_SECRET_MARKETPLACE_BUYER=your_marketplace_buyer_client_secret
+   CLIENT_ID_MARKETPLACE_SELLER=your_marketplace_seller_client_id
+   CLIENT_SECRET_MARKETPLACE_SELLER=your_marketplace_seller_client_secret
    ```
    **Follow these steps on Replit to add your Secrets**:
    <div align="center">
@@ -85,9 +85,9 @@ The demo spins up two independent agent servers that communicate via HTTP endpoi
 
 ```
 ┌─────────────────┐                      ┌─────────────────┐
-│   Agent A       │  HTTP POST /chat     │   Agent B       │
-│ (Marketplace    │─────────────────────▶│ (Marketplace    │
-│    Buyer)       │◀─────────────────────│    Seller)      │
+│ Marketplace     │  HTTP POST /chat     │ Marketplace     │
+│    Buyer        │─────────────────────▶│    Seller       │
+│                 │◀─────────────────────│                 │
 │  Port: 7576     │                       │  Port: 7577     │
 └─────────────────┘  Negotiation Flow    └─────────────────┘
         │                                          │
@@ -105,16 +105,16 @@ The demo spins up two independent agent servers that communicate via HTTP endpoi
 ### Environment Variables
 ```env
 ANTHROPIC_API_KEY=your_anthropic_key
-CLIENT_ID_AGENT_A=your_agent_a_client_id
-CLIENT_SECRET_AGENT_A=your_agent_a_client_secret
-CLIENT_ID_AGENT_B=your_agent_b_client_id  
-CLIENT_SECRET_AGENT_B=your_agent_b_client_secret
+CLIENT_ID_MARKETPLACE_BUYER=your_marketplace_buyer_client_id
+CLIENT_SECRET_MARKETPLACE_BUYER=your_marketplace_buyer_client_secret
+CLIENT_ID_MARKETPLACE_SELLER=your_marketplace_seller_client_id  
+CLIENT_SECRET_MARKETPLACE_SELLER=your_marketplace_seller_client_secret
 BUYER_BUDGET=10  # Optional: Set custom budget (default: 10)
 ```
 
 ### Replit Port Configuration
-- **Agent A**: Internal port 7576 → External port 3000
-- **Agent B**: Internal port 7577 → External port 3001
+- **Marketplace Buyer**: Internal port 7576 → External port 3000
+- **Marketplace Seller**: Internal port 7577 → External port 3001
 
 ## 💻 Local Development
 
@@ -130,8 +130,8 @@ cd ack-private-data-marketplace
 ```
 
 ### Local Access Points
-- Agent A: `http://localhost:7576`
-- Agent B: `http://localhost:7577`
+- Marketplace Buyer: `http://localhost:7576`
+- Marketplace Seller: `http://localhost:7577`
 
 ## 🐛 Troubleshooting
 

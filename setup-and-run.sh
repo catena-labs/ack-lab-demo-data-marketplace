@@ -111,7 +111,7 @@ echo ""
 print_color "$BLUE" "🔧 Checking required credentials..."
 
 # Required environment variables
-REQUIRED_VARS=("ANTHROPIC_API_KEY" "CLIENT_ID_AGENT_A" "CLIENT_SECRET_AGENT_A" "CLIENT_ID_AGENT_B" "CLIENT_SECRET_AGENT_B")
+REQUIRED_VARS=("ANTHROPIC_API_KEY" "CLIENT_ID_MARKETPLACE_BUYER" "CLIENT_SECRET_MARKETPLACE_BUYER" "CLIENT_ID_MARKETPLACE_SELLER" "CLIENT_SECRET_MARKETPLACE_SELLER")
 OPTIONAL_VARS=("BUYER_BUDGET")
 MISSING_VARS=()
 
@@ -129,8 +129,8 @@ if [ ${#MISSING_VARS[@]} -gt 0 ]; then
     print_color "$BLUE" "This demo requires:"
     print_color "$BLUE" "• Anthropic API Key for AI capabilities (claude-sonnet model)"
     print_color "$BLUE" "• ACK Lab SDK credentials for two agents:"
-    print_color "$BLUE" "  - Agent A: Marketplace buyer agent with a configurable budget (default \$10)"
-    print_color "$BLUE" "  - Agent B: Marketplace seller agent with data resources"
+    print_color "$BLUE" "  - Marketplace Buyer: Agent with a configurable budget (default \$10)"
+    print_color "$BLUE" "  - Marketplace Seller: Agent with data resources"
     echo ""
     print_color "$BLUE" "Get Anthropic API key from: https://console.anthropic.com/"
     print_color "$BLUE" "Get ACK Lab credentials from: https://ack-lab.catenalabs.com"
@@ -170,17 +170,17 @@ if [ ${#MISSING_VARS[@]} -gt 0 ]; then
             "ANTHROPIC_API_KEY")
                 print_color "$CYAN" "Enter your Anthropic API Key:"
                 ;;
-            "CLIENT_ID_AGENT_A")
-                print_color "$CYAN" "Enter CLIENT_ID for Agent A (Marketplace Buyer):"
+            "CLIENT_ID_MARKETPLACE_BUYER")
+                print_color "$CYAN" "Enter CLIENT_ID for Marketplace Buyer:"
                 ;;
-            "CLIENT_SECRET_AGENT_A")
-                print_color "$CYAN" "Enter CLIENT_SECRET for Agent A (Marketplace Buyer):"
+            "CLIENT_SECRET_MARKETPLACE_BUYER")
+                print_color "$CYAN" "Enter CLIENT_SECRET for Marketplace Buyer:"
                 ;;
-            "CLIENT_ID_AGENT_B")
-                print_color "$CYAN" "Enter CLIENT_ID for Agent B (Marketplace Seller):"
+            "CLIENT_ID_MARKETPLACE_SELLER")
+                print_color "$CYAN" "Enter CLIENT_ID for Marketplace Seller:"
                 ;;
-            "CLIENT_SECRET_AGENT_B")
-                print_color "$CYAN" "Enter CLIENT_SECRET for Agent B (Marketplace Seller):"
+            "CLIENT_SECRET_MARKETPLACE_SELLER")
+                print_color "$CYAN" "Enter CLIENT_SECRET for Marketplace Seller:"
                 ;;
         esac
         
@@ -314,8 +314,8 @@ if [ -n "$BUYER_BUDGET" ]; then
 else
     BUDGET_DISPLAY="\$10"
 fi
-print_color "$YELLOW" "• Agent A (Marketplace Buyer): Port 7576 - Has a $BUDGET_DISPLAY budget"
-print_color "$YELLOW" "• Agent B (Marketplace Seller): Port 7577 - Offers data resources"
+print_color "$YELLOW" "• Marketplace Buyer: Port 7576 - Has a $BUDGET_DISPLAY budget"
+print_color "$YELLOW" "• Marketplace Seller: Port 7577 - Offers data resources"
 echo ""
 
 # Start the agents server in the background
@@ -327,25 +327,25 @@ AGENTS_PID=$!
 sleep 3
 
 # Check if agents are running
-AGENT_A_RUNNING=false
-AGENT_B_RUNNING=false
+MARKETPLACE_BUYER_RUNNING=false
+MARKETPLACE_SELLER_RUNNING=false
 
 for i in {1..5}; do
     if curl -f -s http://localhost:7576 > /dev/null 2>&1; then
-        AGENT_A_RUNNING=true
+        MARKETPLACE_BUYER_RUNNING=true
     fi
     if curl -f -s http://localhost:7577 > /dev/null 2>&1; then
-        AGENT_B_RUNNING=true
+        MARKETPLACE_SELLER_RUNNING=true
     fi
     
-    if [ "$AGENT_A_RUNNING" = true ] && [ "$AGENT_B_RUNNING" = true ]; then
+    if [ "$MARKETPLACE_BUYER_RUNNING" = true ] && [ "$MARKETPLACE_SELLER_RUNNING" = true ]; then
         break
     fi
     
     sleep 1
 done
 
-if [ "$AGENT_A_RUNNING" = true ] && [ "$AGENT_B_RUNNING" = true ]; then
+if [ "$MARKETPLACE_BUYER_RUNNING" = true ] && [ "$MARKETPLACE_SELLER_RUNNING" = true ]; then
     print_color "$GREEN" "✅ Both agent servers are running!"
 else
     print_color "$YELLOW" "⚠️  Agent servers may still be starting..."
@@ -355,11 +355,11 @@ fi
 print_color "$BLUE" "\nAgent Server Endpoints:"
 if [ "$ENVIRONMENT" = "replit" ]; then
     # On Replit, ports are forwarded: 7576->3000, 7577->3001
-    print_color "$GREEN" "  • Agent A (Marketplace Buyer): https://$REPLIT_DEV_DOMAIN:3000"
-    print_color "$GREEN" "  • Agent B (Marketplace Seller): https://$REPLIT_DEV_DOMAIN:3001"
+    print_color "$GREEN" "  • Marketplace Buyer: https://$REPLIT_DEV_DOMAIN:3000"
+    print_color "$GREEN" "  • Marketplace Seller: https://$REPLIT_DEV_DOMAIN:3001"
 else
-    print_color "$GREEN" "  • Agent A (Marketplace Buyer): http://localhost:7576"
-    print_color "$GREEN" "  • Agent B (Marketplace Seller): http://localhost:7577"
+    print_color "$GREEN" "  • Marketplace Buyer: http://localhost:7576"
+    print_color "$GREEN" "  • Marketplace Seller: http://localhost:7577"
 fi
 
 echo ""
