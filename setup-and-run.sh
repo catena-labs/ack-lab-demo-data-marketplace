@@ -49,6 +49,11 @@ else
         # Add required lines at the top
         echo "DECODE_JWT=true" > "$TEMP_FILE"
         echo "NODE_NO_WARNINGS=1" >> "$TEMP_FILE"
+
+        if [ -n "$REPLIT_DEV_DOMAIN" ]; then
+            echo "# Note: Use Replit Secrets for sensitive credentials!" >> "$TEMP_FILE"
+            echo "# Do NOT put API keys or secrets in this file on Replit." >> "$TEMP_FILE"
+        fi
         
         # Add existing content, skipping any existing DECODE_JWT or NODE_NO_WARNINGS lines
         while IFS= read -r line || [ -n "$line" ]; do
