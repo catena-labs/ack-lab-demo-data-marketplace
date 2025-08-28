@@ -88,7 +88,6 @@ const dataCatalogue: DataResource[] = [
 // ===== Transaction Management =====
 const pendingNegotiations = new Map<string, PendingNegotiation>()
 const completedTransactions = new Map<string, { resourceId: string; finalPrice: number }>()
-let lastProvidedPaymentToken: string | null = null
 
 // ===== SDK Instances =====
 function validateEnvironmentVariables() {
@@ -288,8 +287,6 @@ const sellerTools = {
         negotiation.paymentToken = paymentToken
       }
       
-      lastProvidedPaymentToken = paymentToken
-      
       logger.info('Payment token generated', paymentToken)
       logJwtIfEnabled(paymentToken, 'Payment token JWT payload')
       
@@ -306,30 +303,22 @@ const sellerTools = {
     }
   }),
 
-  getLastPaymentToken: tool({
-    description: "Retrieves the payment token previously provided",
-    inputSchema: z.object({}),
-    execute: async () => {
-      if (lastProvidedPaymentToken) {
-        return {
-          paymentToken: lastProvidedPaymentToken,
-          message: "Found the last payment token provided"
-        }
-      }
-      return {
-        paymentToken: null,
-        message: "No payment token has been provided yet"
-      }
-    }
-  }),
+
 
   provideAccessDataURL: tool({
-    description: "Generates direct download URL for confirmed payment",
+    description: "Generates direct download URL for confirmed payment using receipt JWT",
     inputSchema: z.object({
-      paymentToken: z.string().describe("The payment token provided earlier"),
       receiptId: z.string().describe("The receipt JWT the buyer provided")
     }),
-    execute: async ({ paymentToken, receiptId }) => {
+    execute: async ({ receiptId }) => {
+      // Extract payment token from receipt JWT
+      const receiptPayload = decodeJwtPayload(receiptId) as any
+      if (!receiptPayload || !receiptPayload.vc?.credentialSubject?.paymentToken) {
+        return { error: "Invalid receipt or missing payment token in receipt" }
+      }
+      
+      const paymentToken = receiptPayload.vc.credentialSubject.paymentToken
+      
       let foundNegotiation: PendingNegotiation | undefined
       let negotiationId: string | undefined
       
@@ -472,14 +461,12 @@ async function runAgentB(message: string) {
     3. If they negotiate: You can go down to minimum price but no lower
     4. Once price is agreed: Use createDataPaymentRequest to generate a payment token
     5. CRITICAL - When buyer confirms payment with a receipt:
-       a. First, use getLastPaymentToken to retrieve the payment token you provided
-       b. Then immediately use provideAccessDataURL with BOTH:
-          - paymentToken: the token from getLastPaymentToken
-          - receiptId: the receipt JWT the buyer just provided
+       a. Use provideAccessDataURL with the receipt JWT the buyer provided
+       b. The tool will automatically extract the payment token from the receipt
        c. Share the resulting download URL with the buyer
     
     DO NOT apologize for technical difficulties or say there's an issue with validation.
-    The provideAccessDataURL tool WILL work if you provide both tokens correctly.
+    The provideAccessDataURL tool WILL work if you provide the receipt correctly.
     
     Minimum prices: Housing $${CONFIG.MIN_PRICES.housing}, Ticker $${CONFIG.MIN_PRICES.ticker}, LLM paper $${CONFIG.MIN_PRICES.llm_paper}
     
@@ -509,7 +496,7 @@ async function runAgentA(message: string) {
     2. If the price is over your budget, negotiate by offering something reasonable but under budget
     3. Be willing to meet in the middle during negotiations
     4. Once you agree on a price, pay using the payment token provided
-    5. Give the marketplace seller BOTH the payment token and the receipt ID
+    5. Give the marketplace seller the receipt ID (the receipt already contains the payment token)
     6. You'll receive an access URL for the data
     
     Negotiation strategy:
@@ -517,9 +504,8 @@ async function runAgentA(message: string) {
     - Be willing to go up to your budget limit
     - If they counter-offer at or below your budget, accept it
     
-    IMPORTANT: Always use the exact paymentToken provided by the marketplace seller.
-    Provide a payment token between <payment_token> and </payment_token> markers.
-    Provide the receipt ID between <receipt_id> and </receipt_id> markers.`,
+    IMPORTANT: Always use the exact paymentToken provided by the marketplace seller for payment.
+    After payment, only provide the receipt ID between <receipt_id> and </receipt_id> markers.`,
     prompt: message,
     tools: buyerTools,
     stopWhen: stepCountIs(12)
