@@ -419,7 +419,7 @@ const buyerTools = {
         const result = await marketplaceBuyerSdk.executePayment(paymentToken)
         const receiptJwt = result.receipt
         
-        logger.success('Payment successful!', `Receipt ID: ${receiptJwt}`)
+        logger.success('Payment successful!', `Receipt: ${receiptJwt}`)
         
         return {
           success: true,
@@ -471,7 +471,7 @@ async function runMarketplaceSeller(message: string) {
     Minimum prices: Housing $${CONFIG.MIN_PRICES.housing}, Ticker $${CONFIG.MIN_PRICES.ticker}, LLM paper $${CONFIG.MIN_PRICES.llm_paper}
     
     Payment token should be provided as a JWT between <payment_token> and </payment_token> markers.
-    Receipt ID should be provided as a JWT between <receipt_id> and </receipt_id> markers.`,
+    Receipt should be provided as a JWT between <receipt> and </receipt> markers. It must be decoded to access the payment token.`,
     prompt: message,
     tools: sellerTools,
     stopWhen: stepCountIs(8)
@@ -496,7 +496,7 @@ async function runMarketplaceBuyer(message: string) {
     2. If the price is over your budget, negotiate by offering something reasonable but under budget
     3. Be willing to meet in the middle during negotiations
     4. Once you agree on a price, pay using the payment token provided
-    5. Give the marketplace seller the receipt ID (the receipt already contains the payment token)
+    5. Give the marketplace seller the receipt JWT (remind the seller that the receipt must be decoded and contains the payment token)
     6. You'll receive an access URL for the data
     
     Negotiation strategy:
@@ -505,7 +505,7 @@ async function runMarketplaceBuyer(message: string) {
     - If they counter-offer at or below your budget, accept it
     
     IMPORTANT: Always use the exact paymentToken provided by the marketplace seller for payment.
-    After payment, only provide the receipt ID between <receipt_id> and </receipt_id> markers.`,
+    After payment, only provide the receipt between <receipt> and </receipt> markers.`,
     prompt: message,
     tools: buyerTools,
     stopWhen: stepCountIs(12)
