@@ -20,7 +20,7 @@ const CONFIG = {
     seller: 7577
   },
   API: {
-    baseUrl: "https://api.ack-lab.com",
+    baseUrl: process.env.ACK_LAB_BASE_URL ?? "https://api.ack-lab.com",
     marketplaceBuyer: {
       clientId: process.env.CLIENT_ID_MARKETPLACE_BUYER || "",
       clientSecret: process.env.CLIENT_SECRET_MARKETPLACE_BUYER || ""
@@ -277,28 +277,34 @@ const sellerTools = {
         'Agreed price': `$${agreedPrice}`
       })
       
-      const { paymentToken } = await marketplaceSellerSdk.createPaymentRequest(
+      const { url: paymentRequestUrl, paymentToken } = await marketplaceSellerSdk.createPaymentRequest(
         agreedPrice * 100,
         { description: `Purchase: ${resource.name}`}
       )
-      
+
       const negotiation = pendingNegotiations.get(negotiationId)
       if (negotiation) {
         negotiation.paymentToken = paymentToken
+      } else {
+        pendingNegotiations.set(negotiationId, {
+          resource,
+          currentOffer: agreedPrice,
+          negotiationRound: 1,
+          paymentToken
+        })
       }
       
-      logger.info('Payment token generated', paymentToken)
-      logJwtIfEnabled(paymentToken, 'Payment token JWT payload')
+      logger.info('Payment request generated', paymentRequestUrl)
       
       return {
-        paymentToken,
+        paymentRequestUrl,
         amount: agreedPrice,
         resource: {
           name: resource.name,
           format: resource.format,
           size: resource.size
         },
-        instruction: `Please pay $${agreedPrice} using this payment token to receive access to the data`
+        instruction: `Please pay $${agreedPrice} using this payment request URL to receive access to the data`
       }
     }
   }),
@@ -306,22 +312,20 @@ const sellerTools = {
 
 
   provideAccessDataURL: tool({
-    description: "Generates direct download URL for confirmed payment using receipt JWT",
+    description: "Generates direct download URL for confirmed payment using receipt URL",
     inputSchema: z.object({
-      receiptId: z.string().describe("The receipt JWT the buyer provided")
+      receiptUrl: z.string().describe("The receipt URL the buyer provided")
     }),
-    execute: async ({ receiptId }) => {
+    execute: async ({ receiptUrl }) => {
+      const receiptJwt = await fetch(receiptUrl).then(res => res.text())
       // Extract payment token from receipt JWT
-      const receiptPayload = decodeJwtPayload(receiptId) as any
+      const receiptPayload = decodeJwtPayload(receiptJwt) as any
       if (!receiptPayload || !receiptPayload.vc?.credentialSubject?.paymentToken) {
         return { error: "Invalid receipt or missing payment token in receipt" }
       }
-      
       const paymentToken = receiptPayload.vc.credentialSubject.paymentToken
-      
       let foundNegotiation: PendingNegotiation | undefined
       let negotiationId: string | undefined
-      
       for (const [id, negotiation] of pendingNegotiations) {
         if (negotiation.paymentToken === paymentToken) {
           foundNegotiation = negotiation
@@ -362,7 +366,7 @@ const sellerTools = {
           validUntil: "48 hours from now",
           accessKey: accessToken
         },
-        receipt: receiptId,
+        receiptUrl,
         message: "Payment confirmed. Here is your direct download URL for the data."
       }
     }
@@ -382,18 +386,6 @@ const buyerTools = {
       try {
         const response = await callAgent({ message })
         logger.incoming('Marketplace seller response', response)
-        
-        const jwtPattern = /eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+/
-        const paymentTokenMatch = response.match(jwtPattern)
-        
-        if (paymentTokenMatch) {
-          const paymentToken = paymentTokenMatch[0]
-          logger.process('Detected payment token (JWT)', { 
-            token: paymentToken.substring(0, 50) + '...' 
-          })
-          logJwtIfEnabled(paymentToken, 'Payment token JWT payload')
-        }
-        
         return response
       } catch (error) {
         logger.error('Error calling marketplace seller', error)
@@ -408,22 +400,23 @@ const buyerTools = {
   executePayment: tool({
     description: "Execute payment for data purchase",
     inputSchema: z.object({
-      paymentToken: z.string().describe("The payment token received from the marketplace seller")
+      paymentRequestUrl: z.string().describe("The payment request URL received from the marketplace seller")
     }),
-    execute: async ({ paymentToken }) => {
-      logger.transaction('Executing payment', { token: paymentToken })
+    execute: async ({ paymentRequestUrl }) => {
+      const paymentToken = await fetch(paymentRequestUrl).then(res => res.text())
+
+      logger.transaction('Executing payment', { url: paymentRequestUrl })
       
       logJwtIfEnabled(paymentToken, 'Payment token being executed')
       
       try {
         const result = await marketplaceBuyerSdk.executePayment(paymentToken)
-        const receiptJwt = result.receipt
         
-        logger.success('Payment successful!', `Receipt: ${receiptJwt}`)
+        logger.success('Payment successful!', `Receipt: ${result.url}`)
         
         return {
           success: true,
-          receiptId: receiptJwt,
+          receiptUrl: result.url,
           message: "Payment completed successfully"
         }
       } catch (error) {
@@ -459,19 +452,17 @@ async function runMarketplaceSeller(message: string) {
     1. When someone requests data: Use findMatchingResource to identify which resource matches their needs
     2. Present the resource with its list price and ask if they want to proceed
     3. If they negotiate: You can go down to minimum price but no lower
-    4. Once price is agreed: Use createDataPaymentRequest to generate a payment token
+    4. Once price is agreed: Use createDataPaymentRequest to generate a payment request URL
     5. CRITICAL - When buyer confirms payment with a receipt:
-       a. Use provideAccessDataURL with the receipt JWT the buyer provided
-       b. The tool will automatically extract the payment token from the receipt
-       c. Share the resulting download URL with the buyer
+       a. Use provideAccessDataURL with the receipt URL the buyer provided
+       b. Share the resulting download URL with the buyer
     
     DO NOT apologize for technical difficulties or say there's an issue with validation.
-    The provideAccessDataURL tool WILL work if you provide the receipt correctly.
     
     Minimum prices: Housing $${CONFIG.MIN_PRICES.housing}, Ticker $${CONFIG.MIN_PRICES.ticker}, LLM paper $${CONFIG.MIN_PRICES.llm_paper}
     
-    Payment token should be provided as a JWT between <payment_token> and </payment_token> markers.
-    Receipt should be provided as a JWT between <receipt> and </receipt> markers. It must be decoded to access the payment token.`,
+    Payment request URL should be provided between <payment_request_url> and </payment_request_url> markers.
+    Receipt URL should be provided between <receipt_url> and </receipt_url> markers.`,
     prompt: message,
     tools: sellerTools,
     stopWhen: stepCountIs(8)
@@ -495,8 +486,8 @@ async function runMarketplaceBuyer(message: string) {
     1. Express interest in the resource
     2. If the price is over your budget, negotiate by offering something reasonable but under budget
     3. Be willing to meet in the middle during negotiations
-    4. Once you agree on a price, pay using the payment token provided
-    5. Give the marketplace seller the receipt JWT (remind the seller that the receipt must be decoded and contains the payment token)
+    4. Once you agree on a price, pay using the payment request URL provided
+    5. Give the marketplace seller the receipt URL
     6. You'll receive an access URL for the data
     
     Negotiation strategy:
@@ -504,8 +495,8 @@ async function runMarketplaceBuyer(message: string) {
     - Be willing to go up to your budget limit
     - If they counter-offer at or below your budget, accept it
     
-    IMPORTANT: Always use the exact paymentToken provided by the marketplace seller for payment.
-    After payment, only provide the receipt between <receipt> and </receipt> markers.`,
+    IMPORTANT: Always use the exact payment request URL provided by the marketplace seller for payment.
+    After payment, only provide the receipt URL between <receipt_url> and </receipt_url> markers.`,
     prompt: message,
     tools: buyerTools,
     stopWhen: stepCountIs(12)
