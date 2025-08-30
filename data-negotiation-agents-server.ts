@@ -116,7 +116,7 @@ const marketplaceBuyerSdk = new AckLabSdk({
   clientSecret: CONFIG.API.marketplaceBuyer.clientSecret
 })
 
-const callAgent = marketplaceBuyerSdk.createAgentCaller(`http://localhost:${CONFIG.PORTS.seller}/chat`)
+const callAgent = marketplaceBuyerSdk.createAgentCaller(`http://localhost:${CONFIG.PORTS.seller}/chat`, z.string(), z.string())
 
 // ===== Helper Functions =====
 function generateAccessToken(resourceId: string): string {
@@ -384,7 +384,7 @@ const buyerTools = {
       logger.agent('Calling marketplace seller', message)
       
       try {
-        const response = await callAgent({ message })
+        const response = await callAgent(message)
         logger.incoming('Marketplace seller response', response)
         return response
       } catch (error) {
