@@ -20,7 +20,7 @@ If you're on Replit already, proceed to Step 2. If you're on Github, click the b
 4. Copy your credentials (see [Getting Started Guide](#getting-started-guide))
 
 ### 3. Configure & Run
-1. Click "Run" on Replit (or run `./setup-and-run.sh` locally)
+1. Click "Run" on Replit (or run `npm run dev` locally)
 2. Enter your credentials when prompted:
    - Anthropic API key. Note: This demo requires `claude-sonnet-4-20250514`. We cannot guarantee it works end-to-end with smaller models from Anthropic or other providers.
    - Marketplace Buyer client ID & secret  
@@ -126,7 +126,7 @@ BUYER_BUDGET=10  # Optional: Set custom budget (default: 10)
 ```bash
 git clone <repository-url>
 cd ack-private-data-marketplace
-./setup-and-run.sh
+npm run dev
 ```
 
 ### Local Access Points

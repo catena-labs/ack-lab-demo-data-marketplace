@@ -150,19 +150,8 @@ if [ ${#MISSING_VARS[@]} -gt 0 ]; then
         print_color "$RED" "⚠️  DO NOT enter sensitive credentials in the console on Replit!"
         print_color "$RED" "⚠️  Free Replit projects are public - your .env file would be visible to everyone!"
         echo ""
-        print_color "$CYAN" "Would you like to:"
-        print_color "$CYAN" "1. Exit now to set up secrets (recommended)"
-        print_color "$CYAN" "2. Continue anyway and enter credentials (NOT RECOMMENDED)"
-        read -p "Enter your choice (1 or 2): " replit_choice
-        
-        if [ "$replit_choice" != "2" ]; then
-            print_color "$GREEN" "✅ Good choice! Please set up your secrets and run this script again."
-            print_color "$BLUE" "After setting up secrets, run: ./setup-and-run.sh"
-            exit 0
-        else
-            print_color "$YELLOW" "⚠️  Proceeding with manual entry (not recommended for security)"
-            echo ""
-        fi
+        print_color "$BLUE" "After setting up secrets, press the Run button to start the demo"
+        exit 0
     fi
 
     for var in "${MISSING_VARS[@]}"; do
