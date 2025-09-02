@@ -143,7 +143,7 @@ BUYER_BUDGET=10  # Optional: Set custom budget (default: 10)
 
 ## 📖 About Agent Commerce Kit (ACK)
 
-**Agent Commerce Kit (ACK)** is an open-source framework that enables AI agents to participate securely in commerce. 
+[**Agent Commerce Kit (ACK)**](https://agentcommercekit.com) is a set of open-source patterns to enable AI agents to participate securely in commerce. As we advance toward an AI-native financial future, ACK addresses the fundamental challenge that today's financial infrastructure was not designed for intelligent machines.
 
 ### What ACK Provides
 
