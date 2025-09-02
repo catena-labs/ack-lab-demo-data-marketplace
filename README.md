@@ -14,18 +14,14 @@ If you're on Replit already, proceed to Step 2. If you're on Github, click the b
 [![Run on Replit](https://replit.com/badge?caption=Run%20on%20Replit)](https://replit.new/github.com/catena-labs/ack-lab-demo-data-marketplace)
 
 ### 2. Get Your Credentials
-1. Go to [ack-lab.catenalabs.com](https://ack-lab.catenalabs.com)
-2. Sign up for the developer preview
-3. Register your Data Marketplace agents through the app flow
-4. Copy your credentials (see [Getting Started Guide](#getting-started-guide))
+1. Get an Anthropic API key from [console.anthropic.com](https://console.anthropic.com) Note: This demo requires `claude-sonnet-4-20250514`. We cannot guarantee it works end-to-end with smaller models from Anthropic or other providers.
+2. If you have not done so already, join the ACK-Lab developer preview at [ack-lab.catenalabs.com](https://ack-lab.catenalabs.com).
+3. If you have not done so already by cloning the app in ACK-Lab, **register your agents** to obtain credentials.(see [Registering Your Agents on ACK-Lab](#registering-your-agents-on-ack-lab) below).
+4. Generate API Keys and copy your credentials (see [Getting Started Guide](#getting-started-guide))
 
 ### 3. Configure & Run
 1. Click "Run" on Replit (or run `npm run dev` locally)
-2. Enter your credentials when prompted:
-   - Anthropic API key. Note: This demo requires `claude-sonnet-4-20250514`. We cannot guarantee it works end-to-end with smaller models from Anthropic or other providers.
-   - Marketplace Buyer client ID & secret  
-   - Marketplace Seller client ID & secret
-3. Start the CLI demo
+2. Start the CLI demo
 
 <div align="center">
   <img src="./assets/replit-run-icon.png" alt="Get Started on Replit" width="100">
@@ -51,9 +47,9 @@ Watch two AI agents negotiate a data marketplace transaction:
 ## Getting Started Guide
 
 ### Registering Your Agents on ACK-Lab
-ACK-Lab makes it easy for you to register some demo agents for this flow. 
+ACK-Lab makes it easy for you to register demo agents for this flow. 
 
-   **Follow these steps on ACK-Lab to create your agents and get the necessary API keys**. You will have to generate the keys for your first agent, enter them in .env or Replit Secrets, then do the same for the second agent:
+   **Follow these steps on ACK-Lab to create your agents and get the necessary API keys**. You will need to generate the API keys for your first agent, enter them in Replit Secrets (or .env if running locally), and then do the same for the second agent:
    <div align="center">
       <img src="./assets/instructions-screenshots/data_demo_1.png" width="50%" style="display: block; margin-bottom: 10px;">
       <img src="./assets/instructions-screenshots/data_demo_2.png" width=50%" style="display: block; margin-bottom: 10px;">
@@ -62,8 +58,8 @@ ACK-Lab makes it easy for you to register some demo agents for this flow.
    </div>
 
 ### Configuring Environment Variables
-- Create a `.env` file or use [Replit Secrets](https://docs.replit.com/replit-workspace/workspace-features/secrets). Note that public Replit projects expose all files, including .env files. We strongly recommend using Replit's Secrets tool.
-   - Add your ACK Lab credentials:
+- Use [Replit Secrets](https://docs.replit.com/replit-workspace/workspace-features/secrets). Note that public Replit projects expose all files, including .env files, so **do not use .env files on Replt.** Enter your secret variables through Replit's Secrets tool.   
+   - Add your ACK Lab credentials. You can find these ID and SECRET variables in the API KEYS section for each agent.
    ```env
    ANTHROPIC_API_KEY=your_anthropic_key
    CLIENT_ID_MARKETPLACE_BUYER=your_marketplace_buyer_client_id
@@ -102,16 +98,6 @@ The demo spins up two independent agent servers that communicate via HTTP endpoi
               └─────────────────────────┘
 ```
 
-### Environment Variables
-```env
-ANTHROPIC_API_KEY=your_anthropic_key
-CLIENT_ID_MARKETPLACE_BUYER=your_marketplace_buyer_client_id
-CLIENT_SECRET_MARKETPLACE_BUYER=your_marketplace_buyer_client_secret
-CLIENT_ID_MARKETPLACE_SELLER=your_marketplace_seller_client_id  
-CLIENT_SECRET_MARKETPLACE_SELLER=your_marketplace_seller_client_secret
-BUYER_BUDGET=10  # Optional: Set custom budget (default: 10)
-```
-
 ### Replit Port Configuration
 - **Marketplace Buyer**: Internal port 7576 → External port 3000
 - **Marketplace Seller**: Internal port 7577 → External port 3001
@@ -122,11 +108,25 @@ BUYER_BUDGET=10  # Optional: Set custom budget (default: 10)
 - Node.js 18+ with npm
 - ACK Lab credentials from [ack-lab.catenalabs.com](https://ack-lab.catenalabs.com)
 
-### Setup
+1. **Clone and Configure**
 ```bash
 git clone <repository-url>
 cd ack-private-data-marketplace
-npm run dev
+```
+
+2. **Create `.env` file** with your credentials:
+```env
+ANTHROPIC_API_KEY=your_anthropic_key
+CLIENT_ID_MARKETPLACE_BUYER=your_marketplace_buyer_client_id
+CLIENT_SECRET_MARKETPLACE_BUYER=your_marketplace_buyer_client_secret
+CLIENT_ID_MARKETPLACE_SELLER=your_marketplace_seller_client_id  
+CLIENT_SECRET_MARKETPLACE_SELLER=your_marketplace_seller_client_secret
+BUYER_BUDGET=10  # Optional: Set custom budget (default: 10)
+```
+
+3. **Run the Setup Script**
+```bash
+   npm run dev
 ```
 
 ### Local Access Points
@@ -143,11 +143,11 @@ npm run dev
 
 ## 📖 About Agent Commerce Kit (ACK)
 
-**Agent Commerce Kit (ACK)** is an open-source framework by [Catena Labs](https://www.catenalabs.com) that enables AI agents to participate securely in commerce. 
+[**Agent Commerce Kit (ACK)**](https://agentcommercekit.com) is a set of open-source patterns to enable AI agents to participate securely in commerce. As we advance toward an AI-native financial future, ACK addresses the fundamental challenge that today's financial infrastructure was not designed for intelligent machines.
 
 ### What ACK Provides
 
-- **ACK-ID**: Verifiable agent identity through DIDs and VCs
+- **ACK-ID**: Verifiable agent identity through Decentralized Identifiers (DIDs) and Verifiable Credentials (VCs)
 - **ACK-Pay**: Agent-native payment patterns for diverse payment rails
 - **ACK-Lab**: Developer preview platform providing identity, wallet, and rulebook for agents
 
