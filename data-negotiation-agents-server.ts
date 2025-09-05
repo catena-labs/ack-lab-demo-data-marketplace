@@ -48,7 +48,7 @@ interface PendingNegotiation {
   resource: DataResource;
   currentOffer: number;
   negotiationRound: number;
-  paymentRequestToken?: string;
+  paymentRequestId?: string;
 }
 
 // ===== Data Catalogue =====
@@ -295,20 +295,24 @@ const sellerTools = {
         "Agreed price": `$${agreedPrice}`,
       });
 
-      const { url: paymentRequestUrl, paymentRequestToken } =
-        await marketplaceSellerSdk.createPaymentRequest(agreedPrice * 100, {
+      const paymentRequestId = `${resourceId}-${negotiationId}`;
+
+      const { url: paymentRequestUrl } =
+        await marketplaceSellerSdk.createPaymentRequest({
+          id: paymentRequestId,
+          amount: agreedPrice * 100,
           description: `Purchase: ${resource.name}`,
         });
 
       const negotiation = pendingNegotiations.get(negotiationId);
       if (negotiation) {
-        negotiation.paymentRequestToken = paymentRequestToken;
+        negotiation.paymentRequestId = paymentRequestId;
       } else {
         pendingNegotiations.set(negotiationId, {
           resource,
           currentOffer: agreedPrice,
           negotiationRound: 1,
-          paymentRequestToken,
+          paymentRequestId,
         });
       }
 
@@ -335,22 +339,14 @@ const sellerTools = {
     }),
     execute: async ({ receiptUrl }) => {
       const receiptJwt = await fetch(receiptUrl).then((res) => res.text());
-      // Extract payment request token from receipt JWT
-      const receiptPayload = decodeJwtPayload(receiptJwt) as any;
-      if (
-        !receiptPayload ||
-        !receiptPayload.vc?.credentialSubject?.paymentRequestToken
-      ) {
-        return {
-          error: "Invalid receipt or missing payment request token in receipt",
-        };
-      }
-      const paymentRequestToken =
-        receiptPayload.vc.credentialSubject.paymentRequestToken;
+
+      const { paymentRequestId } =
+        await marketplaceSellerSdk.verifyPaymentReceipt(receiptJwt);
+
       let foundNegotiation: PendingNegotiation | undefined;
       let negotiationId: string | undefined;
       for (const [id, negotiation] of pendingNegotiations) {
-        if (negotiation.paymentRequestToken === paymentRequestToken) {
+        if (negotiation.paymentRequestId === paymentRequestId) {
           foundNegotiation = negotiation;
           negotiationId = id;
           break;
@@ -361,14 +357,14 @@ const sellerTools = {
         return { error: "Payment request token not found or invalid" };
       }
 
-      if (completedTransactions.has(paymentRequestToken)) {
+      if (completedTransactions.has(paymentRequestId)) {
         return { error: "This transaction has already been completed" };
       }
 
       const accessToken = generateAccessToken(foundNegotiation.resource.id);
       const downloadUrl = `https://data-provider.example.com/download/${foundNegotiation.resource.id}?token=${accessToken}`;
 
-      completedTransactions.set(paymentRequestToken, {
+      completedTransactions.set(paymentRequestId, {
         resourceId: foundNegotiation.resource.id,
         finalPrice: foundNegotiation.currentOffer,
       });
@@ -497,12 +493,12 @@ async function runMarketplaceSeller(message: string) {
        a. Use provideAccessDataURL with the receipt URL the buyer provided
        b. Share the resulting download URL with the buyer
 
+    DO NOT share the data download URL without calling provideAccessDataURL.
     DO NOT apologize for technical difficulties or say there's an issue with validation.
 
     Minimum prices: Housing $${CONFIG.MIN_PRICES.housing}, Ticker $${CONFIG.MIN_PRICES.ticker}, LLM paper $${CONFIG.MIN_PRICES.llm_paper}
 
-    Payment request URL should be provided between <payment_request_url> and </payment_request_url> markers.
-    Receipt URL should be provided between <receipt_url> and </receipt_url> markers.`,
+    Payment request URL should be provided between <payment_request_url> and </payment_request_url> markers.`,
     prompt: message,
     tools: sellerTools,
     stopWhen: stepCountIs(8),
