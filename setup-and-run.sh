@@ -25,27 +25,27 @@ if [ ! -f ".env" ]; then
     print_color "$GREEN" "✅ .env file created with required settings"
 else
     print_color "$GREEN" "✅ .env file found"
-    
+
     # Check if required lines exist, add them if missing
     NEEDS_UPDATE=false
-    
+
     # Check for DECODE_JWT
     if ! grep -q "^DECODE_JWT=" .env 2>/dev/null; then
         NEEDS_UPDATE=true
     fi
-    
+
     # Check for NODE_NO_WARNINGS
     if ! grep -q "^NODE_NO_WARNINGS=" .env 2>/dev/null; then
         NEEDS_UPDATE=true
     fi
-    
+
     # If either is missing, we need to restructure the file
     if [ "$NEEDS_UPDATE" = true ]; then
         print_color "$YELLOW" "📝 Updating .env file with required settings..."
-        
+
         # Create a temporary file with the required lines first
         TEMP_FILE=$(mktemp)
-        
+
         # Add required lines at the top
         echo "DECODE_JWT=true" > "$TEMP_FILE"
         echo "NODE_NO_WARNINGS=1" >> "$TEMP_FILE"
@@ -54,14 +54,14 @@ else
             echo "# Note: Use Replit Secrets for sensitive credentials!" >> "$TEMP_FILE"
             echo "# Do NOT put API keys or secrets in this file on Replit." >> "$TEMP_FILE"
         fi
-        
+
         # Add existing content, skipping any existing DECODE_JWT or NODE_NO_WARNINGS lines
         while IFS= read -r line || [ -n "$line" ]; do
             if [[ ! "$line" =~ ^DECODE_JWT= ]] && [[ ! "$line" =~ ^NODE_NO_WARNINGS= ]] && [ -n "$line" ]; then
                 echo "$line" >> "$TEMP_FILE"
             fi
         done < .env
-        
+
         # Replace the original file
         mv "$TEMP_FILE" .env
         print_color "$GREEN" "✅ .env file updated with required settings"
@@ -69,32 +69,32 @@ else
         # Check if the values are correct
         UPDATE_DECODE_JWT=false
         UPDATE_NODE_NO_WARNINGS=false
-        
+
         if grep -q "^DECODE_JWT=" .env 2>/dev/null; then
             CURRENT_DECODE_JWT=$(grep "^DECODE_JWT=" .env | cut -d'=' -f2)
             if [ "$CURRENT_DECODE_JWT" != "true" ]; then
                 UPDATE_DECODE_JWT=true
             fi
         fi
-        
+
         if grep -q "^NODE_NO_WARNINGS=" .env 2>/dev/null; then
             CURRENT_NODE_NO_WARNINGS=$(grep "^NODE_NO_WARNINGS=" .env | cut -d'=' -f2)
             if [ "$CURRENT_NODE_NO_WARNINGS" != "1" ]; then
                 UPDATE_NODE_NO_WARNINGS=true
             fi
         fi
-        
+
         if [ "$UPDATE_DECODE_JWT" = true ] || [ "$UPDATE_NODE_NO_WARNINGS" = true ]; then
             print_color "$YELLOW" "📝 Correcting values in .env file..."
-            
+
             if [ "$UPDATE_DECODE_JWT" = true ]; then
                 sed -i.bak "s|^DECODE_JWT=.*|DECODE_JWT=true|" .env && rm .env.bak
             fi
-            
+
             if [ "$UPDATE_NODE_NO_WARNINGS" = true ]; then
                 sed -i.bak "s|^NODE_NO_WARNINGS=.*|NODE_NO_WARNINGS=1|" .env && rm .env.bak
             fi
-            
+
             print_color "$GREEN" "✅ .env values corrected"
         fi
     fi
@@ -111,7 +111,7 @@ echo ""
 print_color "$BLUE" "🔧 Checking required credentials..."
 
 # Required environment variables
-REQUIRED_VARS=("ANTHROPIC_API_KEY" "CLIENT_ID_MARKETPLACE_BUYER" "CLIENT_SECRET_MARKETPLACE_BUYER" "CLIENT_ID_MARKETPLACE_SELLER" "CLIENT_SECRET_MARKETPLACE_SELLER")
+REQUIRED_VARS=("ANTHROPIC_API_KEY" "ACK_LAB_CLIENT_ID" "ACK_LAB_CLIENT_SECRET" "AGENT_ID_MARKETPLACE_BUYER" "AGENT_ID_MARKETPLACE_SELLER")
 OPTIONAL_VARS=("BUYER_BUDGET")
 MISSING_VARS=()
 
@@ -128,14 +128,14 @@ if [ ${#MISSING_VARS[@]} -gt 0 ]; then
     echo ""
     print_color "$BLUE" "This demo requires:"
     print_color "$BLUE" "• Anthropic API Key for AI capabilities (claude-sonnet model)"
-    print_color "$BLUE" "• ACK Lab SDK credentials for two agents:"
+    print_color "$BLUE" "• ACK-Lab SDK credentials for two agents:"
     print_color "$BLUE" "  - Marketplace Buyer: Agent with a configurable budget (default \$10)"
     print_color "$BLUE" "  - Marketplace Seller: Agent with data resources"
     echo ""
     print_color "$BLUE" "Get Anthropic API key from: https://console.anthropic.com/"
-    print_color "$BLUE" "Get ACK Lab credentials from: https://ack-lab.catenalabs.com"
+    print_color "$BLUE" "Get ACK-Lab credentials from: https://ack-lab.catenalabs.com"
     echo ""
-    
+
     # Check if running on Replit for security guidance
     if [ -n "$REPLIT_DEV_DOMAIN" ]; then
         print_color "$CYAN" "🔒 SECURITY NOTICE: You're running on Replit!"
@@ -159,22 +159,22 @@ if [ ${#MISSING_VARS[@]} -gt 0 ]; then
             "ANTHROPIC_API_KEY")
                 print_color "$CYAN" "Enter your Anthropic API Key:"
                 ;;
-            "CLIENT_ID_MARKETPLACE_BUYER")
-                print_color "$CYAN" "Enter CLIENT_ID for Marketplace Buyer:"
+            "ACK_LAB_CLIENT_ID")
+                print_color "$CYAN" "Enter ACK_LAB_CLIENT_ID for Marketplace Buyer:"
                 ;;
-            "CLIENT_SECRET_MARKETPLACE_BUYER")
-                print_color "$CYAN" "Enter CLIENT_SECRET for Marketplace Buyer:"
+            "ACK_LAB_CLIENT_SECRET")
+                print_color "$CYAN" "Enter ACK_LAB_CLIENT_SECRET for Marketplace Buyer:"
                 ;;
-            "CLIENT_ID_MARKETPLACE_SELLER")
-                print_color "$CYAN" "Enter CLIENT_ID for Marketplace Seller:"
+            "AGENT_ID_MARKETPLACE_BUYER")
+                print_color "$CYAN" "Enter AGENT_ID for Marketplace Buyer:"
                 ;;
-            "CLIENT_SECRET_MARKETPLACE_SELLER")
-                print_color "$CYAN" "Enter CLIENT_SECRET for Marketplace Seller:"
+            "AGENT_ID_MARKETPLACE_SELLER")
+                print_color "$CYAN" "Enter AGENT_ID for Marketplace Seller:"
                 ;;
         esac
-        
+
         read -p "> " value
-        
+
         if [ -n "$value" ]; then
             # Check if the variable already exists in .env, update it, otherwise append
             if grep -q "^${var}=" .env 2>/dev/null; then
@@ -214,7 +214,7 @@ if [ -z "$BUYER_BUDGET" ] && ! grep -q "^BUYER_BUDGET=" .env 2>/dev/null; then
     fi
     print_color "$YELLOW" "Press Enter to use the default value of \$10"
     read -p "> \$" budget_value
-    
+
     # Use default if empty
     if [ -z "$budget_value" ]; then
         budget_value="10"
@@ -228,10 +228,10 @@ if [ -z "$BUYER_BUDGET" ] && ! grep -q "^BUYER_BUDGET=" .env 2>/dev/null; then
             print_color "$GREEN" "✅ Budget set to: \$$budget_value"
         fi
     fi
-    
+
     # Save to .env
     echo "BUYER_BUDGET=$budget_value" >> .env
-    
+
     # Reload environment
     set -a
     source .env 2>/dev/null || true
@@ -244,15 +244,15 @@ print_color "$BLUE" "📦 Installing root dependencies..."
 # Check if node_modules exists, if not or if package.json is newer, install
 if [ ! -d "node_modules" ] || [ "package.json" -nt "node_modules" ]; then
     print_color "$YELLOW" "Running npm install..."
-    
+
     # Check if npm is available
     if ! command -v npm &> /dev/null; then
         print_color "$RED" "❌ npm is not installed. Please install Node.js and npm first."
         exit 1
     fi
-    
+
     npm install
-    
+
     if [ $? -eq 0 ]; then
         print_color "$GREEN" "✅ Root dependencies installed successfully"
     else
@@ -281,7 +281,7 @@ for var in "${REQUIRED_VARS[@]}"; do
     set -a
     source .env 2>/dev/null || true
     set +a
-    
+
     if [ -z "${!var}" ]; then
         print_color "$RED" "❌ ${var} is still not set!"
         FINAL_CHECK_FAILED=true
@@ -326,11 +326,11 @@ for i in {1..5}; do
     if curl -f -s http://localhost:7577 > /dev/null 2>&1; then
         MARKETPLACE_SELLER_RUNNING=true
     fi
-    
+
     if [ "$MARKETPLACE_BUYER_RUNNING" = true ] && [ "$MARKETPLACE_SELLER_RUNNING" = true ]; then
         break
     fi
-    
+
     sleep 1
 done
 

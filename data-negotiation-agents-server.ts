@@ -3,7 +3,7 @@ import { generateText, stepCountIs, tool } from "ai";
 import { serveAgent, serveAuthedAgent } from "./serve-agent";
 import { anthropic } from "@ai-sdk/anthropic";
 import { z } from "zod";
-import { AckLabSdk } from "@ack-lab/sdk";
+import { AckLabAgent } from "@ack-lab/sdk";
 import { logger } from "./logger";
 
 // ===== Configuration =====
@@ -22,12 +22,14 @@ const CONFIG = {
   API: {
     baseUrl: process.env.ACK_LAB_BASE_URL ?? "https://api.ack-lab.com",
     marketplaceBuyer: {
-      clientId: process.env.CLIENT_ID_MARKETPLACE_BUYER || "",
-      clientSecret: process.env.CLIENT_SECRET_MARKETPLACE_BUYER || "",
+      clientId: process.env.ACK_LAB_CLIENT_ID || "",
+      clientSecret: process.env.ACK_LAB_CLIENT_SECRET || "",
+      agentId: process.env.AGENT_ID_MARKETPLACE_BUYER || "",
     },
     marketplaceSeller: {
-      clientId: process.env.CLIENT_ID_MARKETPLACE_SELLER || "",
-      clientSecret: process.env.CLIENT_SECRET_MARKETPLACE_SELLER || "",
+      clientId: process.env.ACK_LAB_CLIENT_ID || "",
+      clientSecret: process.env.ACK_LAB_CLIENT_SECRET || "",
+      agentId: process.env.AGENT_ID_MARKETPLACE_SELLER || "",
     },
   },
 };
@@ -98,10 +100,10 @@ const completedTransactions = new Map<
 // ===== SDK Instances =====
 function validateEnvironmentVariables() {
   const required = [
-    "CLIENT_ID_MARKETPLACE_BUYER",
-    "CLIENT_SECRET_MARKETPLACE_BUYER",
-    "CLIENT_ID_MARKETPLACE_SELLER",
-    "CLIENT_SECRET_MARKETPLACE_SELLER",
+    "ACK_LAB_CLIENT_ID",
+    "ACK_LAB_CLIENT_SECRET",
+    "AGENT_ID_MARKETPLACE_BUYER",
+    "AGENT_ID_MARKETPLACE_SELLER",
   ];
 
   const missing = required.filter((key) => !process.env[key]);
@@ -112,19 +114,21 @@ function validateEnvironmentVariables() {
   }
 }
 
-const marketplaceSellerSdk = new AckLabSdk({
+const marketplaceSellerAgent = new AckLabAgent({
   baseUrl: CONFIG.API.baseUrl,
   clientId: CONFIG.API.marketplaceSeller.clientId,
   clientSecret: CONFIG.API.marketplaceSeller.clientSecret,
+  agentId: CONFIG.API.marketplaceSeller.agentId,
 });
 
-const marketplaceBuyerSdk = new AckLabSdk({
+const marketplaceBuyerAgent = new AckLabAgent({
   baseUrl: CONFIG.API.baseUrl,
   clientId: CONFIG.API.marketplaceBuyer.clientId,
   clientSecret: CONFIG.API.marketplaceBuyer.clientSecret,
+  agentId: CONFIG.API.marketplaceBuyer.agentId,
 });
 
-const callAgent = marketplaceBuyerSdk.createAgentCaller(
+const callAgent = marketplaceBuyerAgent.createAgentCaller(
   `http://localhost:${CONFIG.PORTS.seller}/chat`,
   z.string(),
   z.string()
@@ -298,7 +302,7 @@ const sellerTools = {
       const paymentRequestId = `${resourceId}-${negotiationId}`;
 
       const { url: paymentRequestUrl } =
-        await marketplaceSellerSdk.createPaymentRequest({
+        await marketplaceSellerAgent.createPaymentRequest({
           id: paymentRequestId,
           amount: agreedPrice * 100,
           description: `Purchase: ${resource.name}`,
@@ -341,7 +345,7 @@ const sellerTools = {
       const receiptJwt = await fetch(receiptUrl).then((res) => res.text());
 
       const { paymentRequestId } =
-        await marketplaceSellerSdk.verifyPaymentReceipt(receiptJwt);
+        await marketplaceSellerAgent.verifyPaymentReceipt(receiptJwt);
 
       let foundNegotiation: PendingNegotiation | undefined;
       let negotiationId: string | undefined;
@@ -440,7 +444,7 @@ const buyerTools = {
       );
 
       try {
-        const result = await marketplaceBuyerSdk.executePayment(
+        const result = await marketplaceBuyerAgent.executePayment(
           paymentRequestToken
         );
 
@@ -559,7 +563,7 @@ export function startAgentServers() {
   serveAuthedAgent({
     port: CONFIG.PORTS.seller,
     runAgent: runMarketplaceSeller,
-    sdk: marketplaceSellerSdk,
+    agent: marketplaceSellerAgent,
     decodeJwt: CONFIG.DECODE_JWT,
   });
 
