@@ -22,13 +22,13 @@ const CONFIG = {
   API: {
     baseUrl: process.env.ACK_LAB_BASE_URL ?? "https://api.ack-lab.com",
     marketplaceBuyer: {
-      clientId: process.env.CLIENT_ID_MARKETPLACE_BUYER || "",
-      clientSecret: process.env.CLIENT_SECRET_MARKETPLACE_BUYER || "",
+      clientId: process.env.ACK_LAB_CLIENT_ID || "",
+      clientSecret: process.env.ACK_LAB_CLIENT_SECRET || "",
       agentId: process.env.AGENT_ID_MARKETPLACE_BUYER || "",
     },
     marketplaceSeller: {
-      clientId: process.env.CLIENT_ID_MARKETPLACE_SELLER || "",
-      clientSecret: process.env.CLIENT_SECRET_MARKETPLACE_SELLER || "",
+      clientId: process.env.ACK_LAB_CLIENT_ID || "",
+      clientSecret: process.env.ACK_LAB_CLIENT_SECRET || "",
       agentId: process.env.AGENT_ID_MARKETPLACE_SELLER || "",
     },
   },
@@ -100,10 +100,10 @@ const completedTransactions = new Map<
 // ===== SDK Instances =====
 function validateEnvironmentVariables() {
   const required = [
-    "CLIENT_ID_MARKETPLACE_BUYER",
-    "CLIENT_SECRET_MARKETPLACE_BUYER",
-    "CLIENT_ID_MARKETPLACE_SELLER",
-    "CLIENT_SECRET_MARKETPLACE_SELLER",
+    "ACK_LAB_CLIENT_ID",
+    "ACK_LAB_CLIENT_SECRET",
+    "AGENT_ID_MARKETPLACE_BUYER",
+    "AGENT_ID_MARKETPLACE_SELLER",
   ];
 
   const missing = required.filter((key) => !process.env[key]);

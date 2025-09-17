@@ -67,14 +67,12 @@ ACK-Lab makes it easy for you to register demo agents for this flow.
 ### Configuring Environment Variables
 
 - Use [Replit Secrets](https://docs.replit.com/replit-workspace/workspace-features/secrets). Note that public Replit projects expose all files, including .env files, so **do not use .env files on Replt.** Enter your secret variables through Replit's Secrets tool.
-  - Add your ACK Lab credentials. You can find these ID and SECRET variables in the API KEYS section for each agent.
+  - Add your ACK-Lab credentials. You can find these ID and SECRET variables in the API KEYS section for each agent.
   ```env
   ANTHROPIC_API_KEY=your_anthropic_key
-  CLIENT_ID_MARKETPLACE_BUYER=your_marketplace_buyer_client_id
-  CLIENT_SECRET_MARKETPLACE_BUYER=your_marketplace_buyer_client_secret
+  ACK_LAB_CLIENT_ID=your_ack_lab_client_id
+  ACK_LAB_CLIENT_SECRET=your_ack_lab_client_secret
   AGENT_ID_MARKETPLACE_BUYER=your_marketplace_buyer_agent_id
-  CLIENT_ID_MARKETPLACE_SELLER=your_marketplace_seller_client_id
-  CLIENT_SECRET_MARKETPLACE_SELLER=your_marketplace_seller_client_secret
   AGENT_ID_MARKETPLACE_SELLER=your_marketplace_seller_agent_id
   ```
   **Follow these steps on Replit to add your Secrets**:
@@ -98,7 +96,7 @@ The demo spins up two independent agent servers that communicate via HTTP endpoi
         │                                          │
         └──────────────────┬───────────────────────┘
                            │
-                    ACK Lab SDK
+                    ACK-Lab SDK
                  (api.ack-lab.com)
               ┌────────────┴────────────┐
               │ • Identity Verification  │
@@ -117,7 +115,7 @@ The demo spins up two independent agent servers that communicate via HTTP endpoi
 ### Prerequisites
 
 - Node.js 18+ with npm
-- ACK Lab credentials from [ack-lab.catenalabs.com](https://ack-lab.catenalabs.com)
+- ACK-Lab credentials from [ack-lab.catenalabs.com](https://ack-lab.catenalabs.com)
 
 1. **Clone and Configure**
 
@@ -130,11 +128,9 @@ cd ack-private-data-marketplace
 
 ```env
 ANTHROPIC_API_KEY=your_anthropic_key
-CLIENT_ID_MARKETPLACE_BUYER=your_marketplace_buyer_client_id
-CLIENT_SECRET_MARKETPLACE_BUYER=your_marketplace_buyer_client_secret
+ACK_LAB_CLIENT_ID=your_ack_lab_client_id
+ACK_LAB_CLIENT_SECRET=your_ack_lab_client_secret
 AGENT_ID_MARKETPLACE_BUYER=your_marketplace_buyer_agent_id
-CLIENT_ID_MARKETPLACE_SELLER=your_marketplace_seller_client_id
-CLIENT_SECRET_MARKETPLACE_SELLER=your_marketplace_seller_client_secret
 AGENT_ID_MARKETPLACE_SELLER=your_marketplace_seller_agent_id
 BUYER_BUDGET=10  # Optional: Set custom budget (default: 10)
 ```
@@ -156,7 +152,7 @@ BUYER_BUDGET=10  # Optional: Set custom budget (default: 10)
 - **Not registered**: Complete the agent registration flow at ACK-Lab first
 - **Port conflicts on Replit**: Check `.replit` file for correct port mappings
 - **Connection refused**: Verify agent servers are running on correct ports
-- **Payment failures**: Check ACK Lab API connectivity and credentials
+- **Payment failures**: Check ACK-Lab API connectivity and credentials
 
 ## 📖 About Agent Commerce Kit (ACK)
 
