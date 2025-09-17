@@ -1,59 +1,69 @@
-import { serve } from "@hono/node-server"
-import { vValidator } from "@hono/valibot-validator"
-import { Hono, type TypedResponse } from "hono"
-import * as v from "valibot"
-import { type JwtString } from "agentcommercekit"
-import { jwtStringSchema } from "agentcommercekit/schemas/valibot"
-import type { AckLabSdk } from "@ack-lab/sdk"
-import { logger } from "./logger"
-import z from "zod"
+import { serve } from "@hono/node-server";
+import { vValidator } from "@hono/valibot-validator";
+import { Hono, type TypedResponse } from "hono";
+import * as v from "valibot";
+import { type JwtString } from "agentcommercekit";
+import { jwtStringSchema } from "agentcommercekit/schemas/valibot";
+import type { AckLabAgent } from "@ack-lab/sdk";
+import { logger } from "./logger";
+import z from "zod";
 
-const DECODE_JWT = process.env.DECODE_JWT !== 'false'
+const DECODE_JWT = process.env.DECODE_JWT !== "false";
 
-type AgentFn = (prompt: string) => Promise<string>
+type AgentFn = (prompt: string) => Promise<string>;
 
 interface ServeAgentConfig {
-  runAgent: AgentFn
-  port: number
-  decodeJwt?: boolean
+  runAgent: AgentFn;
+  port: number;
+  decodeJwt?: boolean;
 }
 
 interface ServeAuthedAgentConfig extends ServeAgentConfig {
-  sdk: AckLabSdk
+  agent: AckLabAgent;
 }
 
 function decodeJwtPayload(jwt: string): object | null {
   try {
-    const tokenParts = jwt.split('.')
-    if (tokenParts.length !== 3) return null
-    
-    const payload = JSON.parse(
-      Buffer.from(tokenParts[1], 'base64').toString()
-    )
-    return payload
+    const tokenParts = jwt.split(".");
+    if (tokenParts.length !== 3) return null;
+
+    const payload = JSON.parse(Buffer.from(tokenParts[1], "base64").toString());
+    return payload;
   } catch {
-    return null
+    return null;
   }
 }
 
-function logJwtIfEnabled(jwt: string, type: 'incoming' | 'outgoing', decodeJwt: boolean) {
-  if (!decodeJwt || !jwt) return
-  
-  const payload = decodeJwtPayload(jwt)
+function logJwtIfEnabled(
+  jwt: string,
+  type: "incoming" | "outgoing",
+  decodeJwt: boolean
+) {
+  if (!decodeJwt || !jwt) return;
+
+  const payload = decodeJwtPayload(jwt);
   if (payload) {
-    logger.debug(`${type === 'incoming' ? 'Incoming' : 'Outgoing'} JWT payload`, payload)
+    logger.debug(
+      `${type === "incoming" ? "Incoming" : "Outgoing"} JWT payload`,
+      payload
+    );
   } else {
-    logger.warn(`Could not decode ${type} JWT`)
+    logger.warn(`Could not decode ${type} JWT`);
   }
 }
 
 function findJwtTokensInMessage(message: string): string[] {
-  const jwtPattern = /\b[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\b/g
-  return message.match(jwtPattern) || []
+  const jwtPattern = /\b[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\.[A-Za-z0-9-_]+\b/g;
+  return message.match(jwtPattern) || [];
 }
 
-function createAgentHtml(title: string, port: number, isAuthenticated: boolean): string {
-  const authContent = isAuthenticated ? `
+function createAgentHtml(
+  title: string,
+  port: number,
+  isAuthenticated: boolean
+): string {
+  const authContent = isAuthenticated
+    ? `
     <div class="info-card">
         <h2>🔐 Authentication</h2>
         <p>This server uses the Agent Commerce Kit SDK for secure, authenticated agent interactions.</p>
@@ -62,7 +72,8 @@ function createAgentHtml(title: string, port: number, isAuthenticated: boolean):
 {
   "jwt": "your-jwt-token-here"
 }</pre>
-    </div>` : `
+    </div>`
+    : `
     <div class="info-card">
         <h2>💬 Usage</h2>
         <p>Send requests to <code>/chat</code> with a JSON payload containing your message:</p>
@@ -75,15 +86,15 @@ function createAgentHtml(title: string, port: number, isAuthenticated: boolean):
 {
   "text": "Agent response here"
 }</pre>
-    </div>`
-  
-  const endpointDescription = isAuthenticated 
+    </div>`;
+
+  const endpointDescription = isAuthenticated
     ? "Send authenticated requests with JWT tokens"
-    : "Send messages directly to the agent"
-  
+    : "Send messages directly to the agent";
+
   const description = isAuthenticated
     ? "This agent requires JWT authentication for all chat interactions."
-    : "This is a simple agent that accepts plain text messages without authentication."
+    : "This is a simple agent that accepts plain text messages without authentication.";
 
   return `
 <!DOCTYPE html>
@@ -153,7 +164,7 @@ function createAgentHtml(title: string, port: number, isAuthenticated: boolean):
         <p>${title}</p>
         <span class="status">Running on Port ${port}</span>
     </div>
-    
+
     <div class="info-card">
         <h2>📡 Available Endpoints</h2>
         <div class="endpoint">
@@ -161,117 +172,124 @@ function createAgentHtml(title: string, port: number, isAuthenticated: boolean):
         </div>
         <p>${description}</p>
     </div>
-    
+
     ${authContent}
-    
+
     <div class="info-card">
         <h2>🚀 About</h2>
-        <p>${isAuthenticated 
-            ? 'This agent server is designed to handle secure commerce and transaction operations through authenticated API calls.'
-            : 'This is a simple agent server that processes text messages and returns responses.'}</p>
-        <p>${isAuthenticated 
-            ? 'The agent processes your requests and returns responses in JWT format for secure communication.'
-            : 'Perfect for testing and development purposes without the complexity of authentication.'}</p>
+        <p>${
+          isAuthenticated
+            ? "This agent server is designed to handle secure commerce and transaction operations through authenticated API calls."
+            : "This is a simple agent server that processes text messages and returns responses."
+        }</p>
+        <p>${
+          isAuthenticated
+            ? "The agent processes your requests and returns responses in JWT format for secure communication."
+            : "Perfect for testing and development purposes without the complexity of authentication."
+        }</p>
     </div>
 </body>
-</html>`
+</html>`;
 }
 
 function createRequestLogger() {
-  return async (c: { req: { method: string; path: string }; res: { status: number } }, next: () => Promise<void>) => {
-    const start = Date.now()
-    await next()
-    const time = Date.now() - start
-    logger.http(c.req.method, c.req.path, c.res.status, `${time}ms`)
-  }
+  return async (
+    c: { req: { method: string; path: string }; res: { status: number } },
+    next: () => Promise<void>
+  ) => {
+    const start = Date.now();
+    await next();
+    const time = Date.now() - start;
+    logger.http(c.req.method, c.req.path, c.res.status, `${time}ms`);
+  };
 }
 
 export function serveAuthedAgent({
   port,
   runAgent,
-  sdk,
-  decodeJwt = DECODE_JWT
+  agent,
+  decodeJwt = DECODE_JWT,
 }: ServeAuthedAgentConfig) {
-  logger.info('Starting authenticated agent server...')
+  logger.info("Starting authenticated agent server...");
 
-  const agentHandler = sdk.createRequestHandler(z.string(), runAgent)
-  const app = new Hono()
+  const agentHandler = agent.createRequestHandler(z.string(), runAgent);
+  const app = new Hono();
 
-  app.use("*", createRequestLogger())
-  
+  app.use("*", createRequestLogger());
+
   app.get("/", (c) => {
-    return c.html(createAgentHtml("Authenticated Agent Server", port, true))
-  })
-  
+    return c.html(createAgentHtml("Authenticated Agent Server", port, true));
+  });
+
   app.post(
     "/chat",
     vValidator("json", v.object({ jwt: jwtStringSchema })),
     async (c): Promise<TypedResponse<{ jwt: JwtString }>> => {
-      const { jwt } = c.req.valid("json")
+      const { jwt } = c.req.valid("json");
 
-      logJwtIfEnabled(jwt, 'incoming', decodeJwt)
+      logJwtIfEnabled(jwt, "incoming", decodeJwt);
 
       try {
-        const result = await agentHandler(jwt)
-        
+        const result = await agentHandler(jwt);
+
         if (result?.jwt) {
-          logJwtIfEnabled(result.jwt, 'outgoing', decodeJwt)
+          logJwtIfEnabled(result.jwt, "outgoing", decodeJwt);
         }
-        
-        return c.json(result)
+
+        return c.json(result);
       } catch (error) {
-        logger.error('Failed to handle JWT request', error)
-        throw error
+        logger.error("Failed to handle JWT request", error);
+        throw error;
       }
     }
-  )
+  );
 
-  serve({ fetch: app.fetch, port })
+  serve({ fetch: app.fetch, port });
 }
 
-export function serveAgent({ 
-  port, 
-  runAgent, 
-  decodeJwt = DECODE_JWT 
+export function serveAgent({
+  port,
+  runAgent,
+  decodeJwt = DECODE_JWT,
 }: ServeAgentConfig) {
-  logger.info('Starting simple agent server...')
+  logger.info("Starting simple agent server...");
 
-  const app = new Hono()
-  
-  app.use("*", createRequestLogger())
-  
+  const app = new Hono();
+
+  app.use("*", createRequestLogger());
+
   app.get("/", (c) => {
-    return c.html(createAgentHtml("Simple Agent Server", port, false))
-  })
-  
+    return c.html(createAgentHtml("Simple Agent Server", port, false));
+  });
+
   app.post(
     "/chat",
     vValidator("json", v.object({ message: v.string() })),
     async (c) => {
-      const { message } = c.req.valid("json")
+      const { message } = c.req.valid("json");
 
-      logger.incoming('Message', message)
-      
+      logger.incoming("Message", message);
+
       if (decodeJwt) {
-        const jwtTokens = findJwtTokensInMessage(message)
+        const jwtTokens = findJwtTokensInMessage(message);
         jwtTokens.forEach((token, index) => {
-          const payload = decodeJwtPayload(token)
+          const payload = decodeJwtPayload(token);
           if (payload) {
-            logger.debug(`JWT token #${index + 1} in message`, payload)
+            logger.debug(`JWT token #${index + 1} in message`, payload);
           }
-        })
+        });
       }
 
       try {
-        const text = await runAgent(message)
-        logger.outgoing('Response', text)
-        return c.json({ text })
+        const text = await runAgent(message);
+        logger.outgoing("Response", text);
+        return c.json({ text });
       } catch (error) {
-        logger.error('Failed to process message', error)
-        throw error
+        logger.error("Failed to process message", error);
+        throw error;
       }
     }
-  )
+  );
 
-  serve({ fetch: app.fetch, port })
+  serve({ fetch: app.fetch, port });
 }
